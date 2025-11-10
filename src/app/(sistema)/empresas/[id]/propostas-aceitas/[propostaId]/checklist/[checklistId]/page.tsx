@@ -5,6 +5,9 @@ import { useParams } from 'next/navigation';
 import { Container, Typography, Box } from '@mui/material';
 import Header from '@/app/components/Header';
 import PreChecklistCard from './components/PreChecklistCard';
+import ChecklistCard from './components/ChecklistCard';
+import ValidacaoDesenvolvimentoCard from './components/ValidacaoDesenvolvimentoCard';
+import AssinaturaContratoCard from './components/AssinaturaContratoCard';
 import ObservacoesCard, { ObservacoesCardHandle } from './components/ObservacoesCard';
 
 export default function ChecklistPage() {
@@ -13,8 +16,18 @@ export default function ChecklistPage() {
   const propostaId = params?.propostaId || '';
   const checklistId = params?.checklistId || '';
   const [mounted, setMounted] = useState(false);
-  const [etapaFinalizadaNome, setEtapaFinalizadaNome] = useState<string | undefined>(undefined);
+  const [etapasFinalizadas, setEtapasFinalizadas] = useState<string[]>([]);
   const observacoesRef = useRef<ObservacoesCardHandle>(null);
+
+  const handleEtapaStatusChange = (nometapa: string, finalizada: boolean) => {
+    setEtapasFinalizadas((prev) => {
+      if (finalizada) {
+        return [...prev.filter((e) => e !== nometapa), nometapa];
+      } else {
+        return prev.filter((e) => e !== nometapa);
+      }
+    });
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -42,15 +55,29 @@ export default function ChecklistPage() {
               <PreChecklistCard 
                 checklistId={checklistId} 
                 onObservacaoAdded={() => observacoesRef.current?.refresh()}
-                onEtapaStatusChange={(finalizada: boolean) => setEtapaFinalizadaNome(finalizada ? 'Pre-Checklist' : undefined)}
+                onEtapaStatusChange={(finalizada: boolean) => handleEtapaStatusChange('Pre-Checklist', finalizada)}
               />
-              {/* Outras etapas virão aqui */}
+              <ChecklistCard 
+                checklistId={checklistId} 
+                onObservacaoAdded={() => observacoesRef.current?.refresh()}
+                onEtapaStatusChange={(finalizada: boolean) => handleEtapaStatusChange('Checklist', finalizada)}
+              />
+              <ValidacaoDesenvolvimentoCard 
+                checklistId={checklistId} 
+                onObservacaoAdded={() => observacoesRef.current?.refresh()}
+                onEtapaStatusChange={(finalizada: boolean) => handleEtapaStatusChange('Validação de Desenvolvimento', finalizada)}
+              />
+              <AssinaturaContratoCard 
+                checklistId={checklistId} 
+                onObservacaoAdded={() => observacoesRef.current?.refresh()}
+                onEtapaStatusChange={(finalizada: boolean) => handleEtapaStatusChange('Assinatura do Contrato', finalizada)}
+              />
             </Box>
           </Box>
 
           {/* Coluna direita - Observações */}
           <Box sx={{ width: 400 }}>
-            <ObservacoesCard ref={observacoesRef} checklistId={checklistId} etapaFinalizadaNome={etapaFinalizadaNome} />
+            <ObservacoesCard ref={observacoesRef} checklistId={checklistId} etapasFinalizadas={etapasFinalizadas} />
           </Box>
         </Box>
       </Container>

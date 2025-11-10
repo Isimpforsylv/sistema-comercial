@@ -18,7 +18,7 @@ import { ExpandMore } from '@mui/icons-material';
 
 interface ObservacoesCardProps {
   checklistId: string | string[];
-  etapaFinalizadaNome?: string; // Nome da etapa finalizada (ex: "Pre-Checklist")
+  etapasFinalizadas?: string[]; // Array de nomes das etapas finalizadas
 }
 
 export interface ObservacoesCardHandle {
@@ -36,7 +36,7 @@ interface ObservacoesPorEtapa {
   [nometapa: string]: Observacao[];
 }
 
-const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(({ checklistId, etapaFinalizadaNome }, ref) => {
+const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(({ checklistId, etapasFinalizadas = [] }, ref) => {
   const [observacoes, setObservacoes] = useState<ObservacoesPorEtapa>({});
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -102,7 +102,7 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {Object.entries(observacoes).map(([nometapa, obs]) => {
-              const estaFinalizada = etapaFinalizadaNome === nometapa;
+              const estaFinalizada = etapasFinalizadas.includes(nometapa);
               
               return (
                 <Accordion key={nometapa} defaultExpanded={!estaFinalizada}>
