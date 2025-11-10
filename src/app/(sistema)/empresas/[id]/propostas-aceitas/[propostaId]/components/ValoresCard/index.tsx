@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import {
   Card,
   CardContent,
@@ -62,6 +62,11 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [valorToDelete, setValorToDelete] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchValores = async () => {
     setLoading(true);
@@ -120,28 +125,38 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
 
   if (loading) return <Typography>Carregando valores...</Typography>;
 
+  if (!mounted) return null;
+
   return (
     <>
       <Card>
         <CardContent>
           <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)}>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
-                <Typography variant="h6">Valores ({valores.length})</Typography>
+            <AccordionSummary 
+              expandIcon={<ExpandMore />}
+              sx={{ 
+                '& .MuiAccordionSummary-content': { 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  width: '100%',
+                  pr: 2 
+                } 
+              }}
+            >
+              <Typography variant="h6">Valores ({valores.length})</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
                   startIcon={<Add />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setModalOpen(true);
-                  }}
+                  onClick={() => setModalOpen(true)}
                   variant="contained"
                   size="small"
                 >
                   Adicionar Valor
                 </Button>
               </Box>
-            </AccordionSummary>
-            <AccordionDetails>
               {valores.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   <Typography color="text.secondary" gutterBottom>
@@ -162,9 +177,9 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
                     </TableHead>
                     <TableBody>
                       {valores.map((valor) => (
-                        <>
+                        <Fragment key={`valor-${valor.id}`}>
                           {/* Linha do Valor Principal */}
-                          <TableRow key={valor.id} sx={{ '& > *': { borderBottom: 'unset' } }}>
+                          <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
                             <TableCell>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Typography variant="body2" fontWeight="bold">
@@ -229,7 +244,7 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
                               <TableCell align="center"></TableCell>
                             </TableRow>
                           ))}
-                        </>
+                        </Fragment>
                       ))}
                     </TableBody>
                   </Table>

@@ -77,7 +77,13 @@ export default function PropostasAceitasPage() {
                   <CardContent>
                     <Typography variant="h6">{prop.nomeproposta}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Criado em: {new Date(prop.criadoem).toLocaleString()}
+                      Criado em: {new Date(prop.criadoem).toLocaleDateString('pt-BR', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     </Typography>
                   </CardContent>
                 </Card>

@@ -32,6 +32,11 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchInformacoes = async () => {
     setLoading(true);
@@ -70,6 +75,8 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
   };
 
   if (loading) return <Typography>Carregando informações...</Typography>;
+
+  if (!mounted) return null;
 
   return (
     <>

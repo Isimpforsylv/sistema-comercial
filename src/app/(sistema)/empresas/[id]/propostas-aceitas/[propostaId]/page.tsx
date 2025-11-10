@@ -1,15 +1,24 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Header from '@/app/components/Header';
 import { useParams } from 'next/navigation';
 import { Container, Typography, Box } from '@mui/material';
 import InformacoesPropostaCard from './components/InformacoesPropostaCard';
 import ValoresCard from './components/ValoresCard';
+import TiposServicoCard from './components/TiposServicoCard';
 
 export default function PropostaAceitaDetalhePage() {
   const params = useParams();
   const empresaId = params?.id || '';
   const propostaId = params?.propostaId || '';
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <>
@@ -27,6 +36,7 @@ export default function PropostaAceitaDetalhePage() {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <InformacoesPropostaCard empresaId={empresaId} propostaId={propostaId} />
           <ValoresCard empresaId={empresaId} propostaId={propostaId} />
+          <TiposServicoCard empresaId={empresaId} propostaId={propostaId} />
         </Box>
       </Container>
     </>
