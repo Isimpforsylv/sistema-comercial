@@ -1,6 +1,7 @@
 'use client';
 
 import { AppBar, Toolbar, Box, IconButton, Button } from '@mui/material';
+import { useState, useEffect } from 'react';
 import { Brightness4, Brightness7, Logout } from '@mui/icons-material';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -14,12 +15,24 @@ interface HeaderProps {
 export default function Header({ showLogout = true }: HeaderProps) {
   const { mode, toggleTheme } = useTheme();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = typeof window !== 'undefined' ? usePathname() : '';
+  const [mounted, setMounted] = useState(false);
 
-  const handleLogout = () => {
-    router.push('/login');
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      router.push('/login');
+    }
   };
 
+  if (!mounted) return null;
   const isLoginPage = pathname === '/login';
 
   return (
@@ -51,7 +64,6 @@ export default function Header({ showLogout = true }: HeaderProps) {
           <IconButton onClick={toggleTheme} color="inherit">
             {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
-          
           {showLogout && !isLoginPage && (
             <Button
               startIcon={<Logout />}

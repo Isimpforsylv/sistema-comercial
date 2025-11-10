@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { createToken, setAuthCookie } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +36,17 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Criar token JWT
+    const token = await createToken({
+      userId: usuario.id,
+      email: usuario.email,
+      nome: usuario.nome,
+      admin: usuario.admin,
+    });
+
+    // Salvar token no cookie
+    await setAuthCookie(token);
 
     // Retornar dados do usuário (sem a senha)
     return NextResponse.json({

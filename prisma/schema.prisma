@@ -42,5 +42,44 @@ model Empresas {
   
   grupo          EmpresasGrupo?  @relation(fields: [idgrupo], references: [id])
 
+  propostasAceitas PropostasAceitas[]
+
   @@map("empresas")
+}
+
+model PropostasAceitas {
+  id           Int      @id @default(autoincrement())
+  idempresa    Int
+  nomeproposta String   @db.VarChar(255)
+  criadoem     DateTime @default(now())
+  atualizadoem DateTime @updatedAt
+
+  empresa      Empresas @relation(fields: [idempresa], references: [id])
+  informacoes  InformacoesPropostasAceitas?
+
+  @@map("propostas_aceitas")
+}
+
+model InformacoesPropostasAceitas {
+  id            Int      @id @default(autoincrement())
+  idproposta    Int      @unique
+  empresa       String   @db.VarChar(255)
+  pais          String   @db.VarChar(100)
+  estado        String   @db.VarChar(100)
+  cidade        String   @db.VarChar(255)
+  endereco      String   @db.VarChar(500)
+  contato       String   @db.VarChar(255)
+  email         String   @db.VarChar(255)
+  telefone      String   @db.VarChar(50)
+  linkwiki      String   @db.VarChar(500)
+  caminhopasta  String   @db.VarChar(500) @default("\\\\serverideia2\\Comercial")
+  dataaceite    DateTime @default(now())
+  criadopor     String   @db.VarChar(255) @default("Sistema")
+  atualizadopor String   @db.VarChar(255) @default("Sistema")
+  criadoem      DateTime @default(now())
+  atualizadoem  DateTime @updatedAt
+
+  proposta      PropostasAceitas @relation(fields: [idproposta], references: [id])
+
+  @@map("informacoespropostas_aceitas")
 }
