@@ -56,6 +56,7 @@ model PropostasAceitas {
 
   empresa      Empresas @relation(fields: [idempresa], references: [id])
   informacoes  InformacoesPropostasAceitas?
+  valores      ValoresPropostasAceitas[]
 
   @@map("propostas_aceitas")
 }
@@ -82,4 +83,50 @@ model InformacoesPropostasAceitas {
   proposta      PropostasAceitas @relation(fields: [idproposta], references: [id])
 
   @@map("informacoespropostas_aceitas")
+}
+
+model ValoresPropostasAceitas {
+  id                    Int      @id @default(autoincrement())
+  idproposta            Int
+  nomevalor             String   @db.VarChar(255)
+  valor                 String   @db.VarChar(100)
+  formapagamento        String   @db.VarChar(255)
+  mensalidade           String   @db.VarChar(100)
+  alteracaomensalidade  String   @db.VarChar(255)
+  prazo                 String   @db.VarChar(255)
+  observacao            String   @db.Text
+  criadopor             String   @db.VarChar(255) @default("Sistema")
+  atualizadopor         String   @db.VarChar(255) @default("Sistema")
+  criadoem              DateTime @default(now())
+  atualizadoem          DateTime @updatedAt
+
+  proposta              PropostasAceitas @relation(fields: [idproposta], references: [id])
+  recursos              RecursosValoresPropostasAceitas[]
+
+  @@map("valorespropostas_aceitas")
+}
+
+model ListaRecursos {
+  id           Int      @id @default(autoincrement())
+  nomerecurso  String   @db.VarChar(255)
+  
+  @@map("listarecursos")
+}
+
+model RecursosValoresPropostasAceitas {
+  id              Int      @id @default(autoincrement())
+  idvalor         Int
+  nomerecurso     String   @db.VarChar(255)
+  valor           String   @db.VarChar(100)
+  mensalidade     String   @db.VarChar(100)
+  formapagamento  String   @db.VarChar(255)
+  prazo           String   @db.VarChar(255)
+  criadopor       String   @db.VarChar(255) @default("Sistema")
+  atualizadopor   String   @db.VarChar(255) @default("Sistema")
+  criadoem        DateTime @default(now())
+  atualizadoem    DateTime @updatedAt
+
+  valor_ref       ValoresPropostasAceitas @relation(fields: [idvalor], references: [id], onDelete: Cascade)
+
+  @@map("recursosvalorespropostas_aceitas")
 }

@@ -15,9 +15,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar usuário por email
+    // Buscar usuário por email (com select otimizado)
     const usuario = await prisma.usuarios.findUnique({
       where: { email },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        senha: true,
+        admin: true,
+      },
     });
 
     if (!usuario) {

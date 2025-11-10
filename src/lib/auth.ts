@@ -30,18 +30,21 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
 
 export async function setAuthCookie(token: string) {
   const cookieStore = await cookies();
+  console.log('🍪 Setando cookie auth-token');
   cookieStore.set('auth-token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Desabilitado para desenvolvimento local
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 10, // 10 dias em segundos
     path: '/',
   });
+  console.log('✅ Cookie setado com sucesso');
 }
 
 export async function getAuthCookie(): Promise<string | null> {
   const cookieStore = await cookies();
   const cookie = cookieStore.get('auth-token');
+  console.log('🔍 Buscando cookie:', cookie ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
   return cookie?.value || null;
 }
 

@@ -11,10 +11,26 @@ export async function GET(request: NextRequest) {
 
     const informacoes = await prisma.informacoesPropostasAceitas.findUnique({
       where: { idproposta: propostaId },
+      select: {
+        id: true,
+        empresa: true,
+        pais: true,
+        estado: true,
+        cidade: true,
+        endereco: true,
+        contato: true,
+        email: true,
+        telefone: true,
+        linkwiki: true,
+        caminhopasta: true,
+        dataaceite: true,
+        atualizadopor: true,
+      },
     });
 
     return NextResponse.json(informacoes);
   } catch (error) {
+    console.error('Erro ao buscar informações:', error);
     return NextResponse.json(null, { status: 500 });
   }
 }
@@ -30,10 +46,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ID da proposta inválido' }, { status: 400 });
     }
 
-    // Buscar o nome da empresa através da proposta
+    // Buscar o nome da empresa através da proposta (com select otimizado)
     const proposta = await prisma.propostasAceitas.findUnique({
       where: { id: propostaId },
-      include: { empresa: true },
+      select: {
+        empresa: {
+          select: {
+            nomeempresa: true,
+          },
+        },
+      },
     });
 
     if (!proposta) {
@@ -80,7 +102,6 @@ export async function PUT(request: NextRequest) {
     const informacoes = await prisma.informacoesPropostasAceitas.update({
       where: { idproposta: propostaId },
       data: {
-        empresa: body.empresa,
         pais: body.pais,
         estado: body.estado,
         cidade: body.cidade,
@@ -92,6 +113,21 @@ export async function PUT(request: NextRequest) {
         caminhopasta: body.caminhopasta,
         dataaceite: new Date(body.dataaceite),
         atualizadopor: user?.nome || 'Sistema',
+      },
+      select: {
+        id: true,
+        empresa: true,
+        pais: true,
+        estado: true,
+        cidade: true,
+        endereco: true,
+        contato: true,
+        email: true,
+        telefone: true,
+        linkwiki: true,
+        caminhopasta: true,
+        dataaceite: true,
+        atualizadopor: true,
       },
     });
 

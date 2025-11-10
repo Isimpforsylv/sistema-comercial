@@ -5,11 +5,11 @@ import { jwtVerify } from 'jose';
 const SECRET_KEY = process.env.JWT_SECRET || 'sua-chave-secreta-super-segura-aqui-mude-em-producao';
 const key = new TextEncoder().encode(SECRET_KEY);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/login', '/api/auth/login'];
+  const publicRoutes = ['/login', '/api/auth/login', '/api/auth/logout'];
   
   if (publicRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.next();
@@ -18,7 +18,20 @@ export async function middleware(request: NextRequest) {
   // Verificar token no cookie
   const token = request.cookies.get('auth-token')?.value;
 
+  // Log temporário para debug
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔒 Proxy check:', { 
+      pathname, 
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 20) + '...' : 'none'
+    });
+  }
+
   if (!token) {
+    // Se for uma rota de API, retorna 401 ao invés de redirecionar
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
     // Redirecionar para login se não houver token
     return NextResponse.redirect(new URL('/login', request.url));
   }
@@ -28,8 +41,12 @@ export async function middleware(request: NextRequest) {
     await jwtVerify(token, key);
     return NextResponse.next();
   } catch (error) {
-    // Token inválido ou expirado, redirecionar para login
-    const response = NextResponse.redirect(new URL('/login', request.url));
+    console.error('❌ Token inválido:', error);
+    // Token inválido ou expirado
+    const response = pathname.startsWith('/api/')
+      ? NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+      : NextResponse.redirect(new URL('/login', request.url));
+    
     response.cookies.delete('auth-token');
     return response;
   }

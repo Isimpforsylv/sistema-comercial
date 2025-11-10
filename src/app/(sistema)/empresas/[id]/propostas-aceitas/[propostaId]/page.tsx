@@ -4,6 +4,7 @@ import Header from '@/app/components/Header';
 import { useParams } from 'next/navigation';
 import { Container, Typography, Box } from '@mui/material';
 import InformacoesPropostaCard from './components/InformacoesPropostaCard';
+import ValoresCard from './components/ValoresCard';
 
 export default function PropostaAceitaDetalhePage() {
   const params = useParams();
@@ -25,7 +26,7 @@ export default function PropostaAceitaDetalhePage() {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <InformacoesPropostaCard empresaId={empresaId} propostaId={propostaId} />
-          {/* Outros cards serão adicionados aqui */}
+          <ValoresCard empresaId={empresaId} propostaId={propostaId} />
         </Box>
       </Container>
     </>
