@@ -13,6 +13,7 @@ export default function ChecklistPage() {
   const propostaId = params?.propostaId || '';
   const checklistId = params?.checklistId || '';
   const [mounted, setMounted] = useState(false);
+  const [etapaFinalizadaNome, setEtapaFinalizadaNome] = useState<string | undefined>(undefined);
   const observacoesRef = useRef<ObservacoesCardHandle>(null);
 
   useEffect(() => {
@@ -40,7 +41,8 @@ export default function ChecklistPage() {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <PreChecklistCard 
                 checklistId={checklistId} 
-                onObservacaoAdded={() => observacoesRef.current?.refresh()} 
+                onObservacaoAdded={() => observacoesRef.current?.refresh()}
+                onEtapaStatusChange={(finalizada: boolean) => setEtapaFinalizadaNome(finalizada ? 'Pre-Checklist' : undefined)}
               />
               {/* Outras etapas virão aqui */}
             </Box>
@@ -48,7 +50,7 @@ export default function ChecklistPage() {
 
           {/* Coluna direita - Observações */}
           <Box sx={{ width: 400 }}>
-            <ObservacoesCard ref={observacoesRef} checklistId={checklistId} />
+            <ObservacoesCard ref={observacoesRef} checklistId={checklistId} etapaFinalizadaNome={etapaFinalizadaNome} />
           </Box>
         </Box>
       </Container>

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const observacoes = await prisma.checklistObservacoes.findMany({
       where: { idchecklist: checklistId },
-      orderBy: { criadoem: 'desc' },
+      orderBy: { criadoem: 'asc' },
     });
 
     return NextResponse.json(observacoes);

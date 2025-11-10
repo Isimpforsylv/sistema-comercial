@@ -169,6 +169,7 @@ model Checklist {
   servico       ServicosPropostasAceitas @relation(fields: [idservico], references: [id], onDelete: Cascade)
   etapas        ChecklistEtapas[]
   observacoes   ChecklistObservacoes[]
+  cobrancas     ChecklistCobrancas[]
 
   @@map("checklist")
 }
@@ -182,6 +183,8 @@ model ChecklistEtapas {
   cobrarem              DateTime?
   historicodataenvio    String?   @db.Text
   historicodataretorno  String?   @db.Text
+  finalizada            Boolean   @default(false)
+  datafim               DateTime?
   criadopor             String    @db.VarChar(255) @default("Sistema")
   atualizadopor         String    @db.VarChar(255) @default("Sistema")
   criadoem              DateTime  @default(now())
@@ -205,6 +208,24 @@ model ChecklistObservacoes {
   checklist     Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
 
   @@map("checklist_observacoes")
+}
+
+model ChecklistCobrancas {
+  id               Int      @id @default(autoincrement())
+  idchecklist      Int
+  nometapa         String   @db.VarChar(255)
+  datacobranca     DateTime
+  quandofcobrado   DateTime
+  proximacobranca  DateTime
+  observacao       String?  @db.Text
+  criadopor        String   @db.VarChar(255) @default("Sistema")
+  atualizadopor    String   @db.VarChar(255) @default("Sistema")
+  criadoem         DateTime @default(now())
+  atualizadoem     DateTime @updatedAt
+
+  checklist        Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
+
+  @@map("checklist_cobrancas")
 }
 
 model Melhoria {

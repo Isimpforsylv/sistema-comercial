@@ -10,14 +10,20 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
-import { History, NoteAdd } from '@mui/icons-material';
+import { History, NoteAdd, ExpandMore } from '@mui/icons-material';
 import ObservacaoModal from '../ObservacaoModal';
 import HistoricoModal from '../HistoricoModal';
+import CobrancasModal from '../CobrancasModal';
+import FinalizarModal from '../FinalizarModal';
 
 interface PreChecklistCardProps {
   checklistId: string | string[];
   onObservacaoAdded?: () => void;
+  onEtapaStatusChange?: (finalizada: boolean) => void;
 }
 
 interface EtapaData {
@@ -27,18 +33,24 @@ interface EtapaData {
   cobrarem: string;
   historicodataenvio: string;
   historicodataretorno: string;
+  finalizada?: boolean;
+  datafim?: string;
 }
 
-export default function PreChecklistCard({ checklistId, onObservacaoAdded }: PreChecklistCardProps) {
+export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEtapaStatusChange }: PreChecklistCardProps) {
   const [etapa, setEtapa] = useState<EtapaData>({
     dataenvio: '',
     dataretorno: '',
     cobrarem: '',
     historicodataenvio: '[]',
     historicodataretorno: '[]',
+    finalizada: false,
+    datafim: '',
   });
   const [obsModalOpen, setObsModalOpen] = useState(false);
   const [historicoModalOpen, setHistoricoModalOpen] = useState(false);
+  const [cobrancasModalOpen, setCobrancasModalOpen] = useState(false);
+  const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
   const [historicoTipo, setHistoricoTipo] = useState<'dataenvio' | 'dataretorno'>('dataenvio');
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -60,7 +72,11 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded }: Pre
             dataenvio: data.dataenvio ? new Date(data.dataenvio).toISOString().split('T')[0] : '',
             dataretorno: data.dataretorno ? new Date(data.dataretorno).toISOString().split('T')[0] : '',
             cobrarem: data.cobrarem ? new Date(data.cobrarem).toISOString().split('T')[0] : '',
+            datafim: data.datafim ? new Date(data.datafim).toISOString().split('T')[0] : '',
+            finalizada: data.finalizada || false,
           });
+          // Notifica o pai sobre mudança de status
+          onEtapaStatusChange?.(data.finalizada || false);
         }
       }
     } catch (error) {
@@ -103,22 +119,199 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded }: Pre
     setHistoricoModalOpen(true);
   };
 
+  const handleDesfinalizar = async () => {
+    if (!confirm('Deseja realmente desfinalizar esta etapa?')) return;
+    
+    try {
+      const response = await fetch(`/api/checklist/${checklistId}/etapas/Pre-Checklist/finalizar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ desfinalizar: true }),
+      });
+
+      if (response.ok) {
+        fetchEtapa();
+        onObservacaoAdded?.();
+      }
+    } catch (error) {
+      console.error('Erro ao desfinalizar etapa:', error);
+    }
+  };
+
   if (loading || !mounted) return <Typography>Carregando...</Typography>;
 
+  // Se a etapa estiver finalizada, renderiza como Accordion
+  if (etapa.finalizada) {
+    return (
+      <>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
+              <Typography variant="h6">Pre-Checklist - Finalizada</Typography>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Typography variant="body2">
+                  <strong>Data início:</strong> {etapa.dataenvio ? new Date(etapa.dataenvio).toLocaleDateString('pt-BR') : '-'}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Data fim:</strong> {etapa.datafim ? new Date(etapa.datafim).toLocaleDateString('pt-BR') : '-'}
+                  {etapa.dataretorno && (
+                    <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                      (Previsão inicial: {new Date(etapa.dataretorno).toLocaleDateString('pt-BR')})
+                    </Typography>
+                  )}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold">Detalhes da Etapa</Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  startIcon={<NoteAdd />}
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setObsModalOpen(true)}
+                >
+                  Observação
+                </Button>
+                {etapa.cobrarem && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setCobrancasModalOpen(true)}
+                  >
+                    Histórico de Cobranças
+                  </Button>
+                )}
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  size="small"
+                  onClick={handleDesfinalizar}
+                >
+                  Desfinalizar
+                </Button>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 3 }}>
+              {/* Campos desabilitados para visualização */}
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                  Data do envio:
+                </Typography>
+                <TextField
+                  type="date"
+                  fullWidth
+                  size="small"
+                  value={etapa.dataenvio || ''}
+                  InputLabelProps={{ shrink: true }}
+                  disabled
+                />
+              </Box>
+
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                  Data do retorno:
+                </Typography>
+                <TextField
+                  type="date"
+                  fullWidth
+                  size="small"
+                  value={etapa.dataretorno || ''}
+                  InputLabelProps={{ shrink: true }}
+                  disabled
+                />
+              </Box>
+
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                  Cobrar em:
+                </Typography>
+                <TextField
+                  type="date"
+                  fullWidth
+                  size="small"
+                  value={etapa.cobrarem || ''}
+                  InputLabelProps={{ shrink: true }}
+                  disabled
+                />
+              </Box>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Modais */}
+        <ObservacaoModal
+          open={obsModalOpen}
+          onClose={() => setObsModalOpen(false)}
+          onSuccess={() => {
+            setObsModalOpen(false);
+            onObservacaoAdded?.();
+          }}
+          checklistId={checklistId}
+          nometapa="Pre-Checklist"
+        />
+
+        <HistoricoModal
+          open={historicoModalOpen}
+          onClose={() => setHistoricoModalOpen(false)}
+          historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno}
+          titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'}
+        />
+
+        <CobrancasModal
+          open={cobrancasModalOpen}
+          onClose={() => setCobrancasModalOpen(false)}
+          onSuccess={() => {
+            setCobrancasModalOpen(false);
+            fetchEtapa();
+            onObservacaoAdded?.();
+          }}
+          checklistId={checklistId}
+          nometapa="Pre-Checklist"
+          dataCobranca={etapa.cobrarem}
+          readonly={true}
+        />
+      </>
+    );
+  }
+
+  // Se a etapa estiver ativa, renderiza como Card normal
   return (
     <>
       <Card>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6">Pre-Checklist</Typography>
-            <Button
-              startIcon={<NoteAdd />}
-              variant="outlined"
-              size="small"
-              onClick={() => setObsModalOpen(true)}
-            >
-              Observação
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                startIcon={<NoteAdd />}
+                variant="outlined"
+                size="small"
+                onClick={() => setObsModalOpen(true)}
+              >
+                Observação
+              </Button>
+              {etapa.cobrarem && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setCobrancasModalOpen(true)}
+                >
+                  Atualizar Cobranças
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                onClick={() => setFinalizarModalOpen(true)}
+              >
+                Finalizar
+              </Button>
+            </Box>
           </Box>
 
           <Box sx={{ display: 'flex', gap: 3 }}>
@@ -203,6 +396,33 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded }: Pre
         onClose={() => setHistoricoModalOpen(false)}
         historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno}
         titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'}
+      />
+
+      <CobrancasModal
+        open={cobrancasModalOpen}
+        onClose={() => setCobrancasModalOpen(false)}
+        onSuccess={() => {
+          setCobrancasModalOpen(false);
+          fetchEtapa();
+          onObservacaoAdded?.();
+        }}
+        checklistId={checklistId}
+        nometapa="Pre-Checklist"
+        dataCobranca={etapa.cobrarem}
+      />
+
+      <FinalizarModal
+        open={finalizarModalOpen}
+        onClose={() => setFinalizarModalOpen(false)}
+        onSuccess={() => {
+          setFinalizarModalOpen(false);
+          fetchEtapa();
+          onObservacaoAdded?.();
+        }}
+        checklistId={checklistId}
+        nometapa="Pre-Checklist"
+        dataInicio={etapa.dataenvio}
+        previsaoInicial={etapa.dataretorno}
       />
     </>
   );

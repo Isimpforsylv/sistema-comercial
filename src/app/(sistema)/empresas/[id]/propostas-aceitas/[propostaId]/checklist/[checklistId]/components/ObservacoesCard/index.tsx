@@ -18,6 +18,7 @@ import { ExpandMore } from '@mui/icons-material';
 
 interface ObservacoesCardProps {
   checklistId: string | string[];
+  etapaFinalizadaNome?: string; // Nome da etapa finalizada (ex: "Pre-Checklist")
 }
 
 export interface ObservacoesCardHandle {
@@ -35,7 +36,7 @@ interface ObservacoesPorEtapa {
   [nometapa: string]: Observacao[];
 }
 
-const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(({ checklistId }, ref) => {
+const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(({ checklistId, etapaFinalizadaNome }, ref) => {
   const [observacoes, setObservacoes] = useState<ObservacoesPorEtapa>({});
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -100,36 +101,40 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {Object.entries(observacoes).map(([nometapa, obs]) => (
-              <Accordion key={nometapa} defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    {nometapa} ({obs.length})
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <List dense disablePadding>
-                    {obs.map((observacao, index) => (
-                      <Box key={observacao.id}>
-                        <ListItem disablePadding sx={{ mb: 1 }}>
-                          <ListItemText
-                            primary={observacao.observacao}
-                            secondary={`Por ${observacao.criadopor} em ${new Date(observacao.criadoem).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}`}
-                          />
-                        </ListItem>
-                        {index < obs.length - 1 && <Divider />}
-                      </Box>
-                    ))}
-                  </List>
-                </AccordionDetails>
-              </Accordion>
-            ))}
+            {Object.entries(observacoes).map(([nometapa, obs]) => {
+              const estaFinalizada = etapaFinalizadaNome === nometapa;
+              
+              return (
+                <Accordion key={nometapa} defaultExpanded={!estaFinalizada}>
+                  <AccordionSummary expandIcon={<ExpandMore />}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {nometapa} ({obs.length}){estaFinalizada ? ' - Finalizada' : ''}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <List dense disablePadding>
+                      {obs.map((observacao, index) => (
+                        <Box key={observacao.id}>
+                          <ListItem disablePadding sx={{ mb: 1 }}>
+                            <ListItemText
+                              primary={observacao.observacao}
+                              secondary={`Por ${observacao.criadopor} em ${new Date(observacao.criadoem).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}`}
+                            />
+                          </ListItem>
+                          {index < obs.length - 1 && <Divider />}
+                        </Box>
+                      ))}
+                    </List>
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
           </Box>
         )}
       </CardContent>
