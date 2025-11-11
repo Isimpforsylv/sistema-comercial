@@ -36,7 +36,17 @@ export default function HistoricoModal({ open, onClose, historico, titulo }: His
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }} 
+      maxWidth="sm" 
+      fullWidth
+    >
       <DialogTitle>{titulo}</DialogTitle>
       <DialogContent>
         {historicoArray.length === 0 ? (

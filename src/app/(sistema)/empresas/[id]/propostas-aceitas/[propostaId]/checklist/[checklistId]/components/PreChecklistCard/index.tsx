@@ -107,7 +107,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
         } else {
           setEtapa((prev) => ({ ...prev, [field]: value }));
         }
-        fetchEtapa(); // Recarrega para pegar histórico atualizado
+        // Removido fetchEtapa() - não precisa recarregar tudo, apenas atualiza o estado local
       }
     } catch (error) {
       console.error('Erro ao atualizar data:', error);

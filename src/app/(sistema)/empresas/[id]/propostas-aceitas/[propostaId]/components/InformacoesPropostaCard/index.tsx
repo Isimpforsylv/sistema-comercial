@@ -57,9 +57,12 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
     fetchInformacoes();
   }, [empresaId, propostaId]);
 
-  const handleSuccess = () => {
+  const handleSuccess = (updatedData?: any) => {
     setModalOpen(false);
-    fetchInformacoes();
+    // Atualiza o estado local diretamente - igual às etapas do checklist
+    if (updatedData) {
+      setInformacoes((prev) => ({ ...prev, ...updatedData }));
+    }
   };
 
   const handleCopyPath = async () => {

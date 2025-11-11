@@ -22,7 +22,7 @@ import { Add, Delete } from '@mui/icons-material';
 interface ValorModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newValor?: any) => void;
   empresaId: string | string[];
   propostaId: string | string[];
   valor?: any;
@@ -62,8 +62,36 @@ export default function ValorModal({
   useEffect(() => {
     if (open) {
       fetchListaRecursos();
+      
+      // Se está editando, preenche o formulário
+      if (valor) {
+        setFormData({
+          nomevalor: valor.nomevalor || '',
+          valor: valor.valor || 'R$ ',
+          formapagamento: valor.formapagamento || '',
+          mensalidade: valor.mensalidade || 'R$ ',
+          alteracaomensalidade: valor.alteracaomensalidade || '',
+          prazo: valor.prazo?.toString() || '',
+          observacao: valor.observacao || '',
+        });
+        setRecursos(valor.recursos || []);
+        setShowRecursos((valor.recursos || []).length > 0);
+      } else {
+        // Se está criando, limpa o formulário
+        setFormData({
+          nomevalor: '',
+          valor: 'R$ ',
+          formapagamento: '',
+          mensalidade: 'R$ ',
+          alteracaomensalidade: '',
+          prazo: '',
+          observacao: '',
+        });
+        setRecursos([]);
+        setShowRecursos(false);
+      }
     }
-  }, [open]);
+  }, [open, valor]);
 
   const fetchListaRecursos = async () => {
     try {
@@ -118,16 +146,20 @@ export default function ValorModal({
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/valores`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, recursos }),
-        }
-      );
+      const isEdit = !!valor;
+      const url = isEdit
+        ? `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/valores/${valor.id}`
+        : `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/valores`;
+      
+      const response = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, recursos }),
+      });
+      
       if (response.ok) {
-        onSuccess();
+        const savedValor = await response.json();
+        onSuccess(savedValor);
         setFormData({
           nomevalor: '',
           valor: 'R$ ',
@@ -148,9 +180,19 @@ export default function ValorModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }} 
+      maxWidth="md" 
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Adicionar Valor</DialogTitle>
+        <DialogTitle>{valor ? 'Editar Valor' : 'Adicionar Valor'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <TextField

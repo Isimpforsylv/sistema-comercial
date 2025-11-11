@@ -132,7 +132,17 @@ export default function CobrancasModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }} 
+      maxWidth="md" 
+      fullWidth
+    >
       <DialogTitle>{readonly ? 'Histórico de Cobranças' : 'Atualizar Cobranças'} - {nometapa}</DialogTitle>
       <DialogContent>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>

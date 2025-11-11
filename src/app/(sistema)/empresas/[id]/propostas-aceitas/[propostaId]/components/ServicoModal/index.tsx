@@ -18,9 +18,10 @@ import {
 interface ServicoModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newServico?: any) => void;
   empresaId: string | string[];
   propostaId: string | string[];
+  servico?: any | null;
 }
 
 interface TipoServico {
@@ -34,6 +35,7 @@ export default function ServicoModal({
   onSuccess,
   empresaId,
   propostaId,
+  servico,
 }: ServicoModalProps) {
   const [formData, setFormData] = useState({
     nomedescricao: '',
@@ -45,8 +47,22 @@ export default function ServicoModal({
   useEffect(() => {
     if (open) {
       fetchTiposServico();
+      
+      // Se está editando, preenche o formulário
+      if (servico) {
+        setFormData({
+          nomedescricao: servico.nomedescricao || '',
+          idtiposervico: servico.idtiposervico?.toString() || '',
+        });
+      } else {
+        // Se está criando, limpa o formulário
+        setFormData({
+          nomedescricao: '',
+          idtiposervico: '',
+        });
+      }
     }
-  }, [open]);
+  }, [open, servico]);
 
   const fetchTiposServico = async () => {
     try {
@@ -68,16 +84,20 @@ export default function ServicoModal({
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/servicos`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        }
-      );
+      const isEdit = !!servico;
+      const url = isEdit
+        ? `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/servicos/${servico.id}`
+        : `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/servicos`;
+      
+      const response = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
       if (response.ok) {
-        onSuccess();
+        const savedServico = await response.json();
+        onSuccess(savedServico);
         setFormData({
           nomedescricao: '',
           idtiposervico: '',
@@ -91,9 +111,19 @@ export default function ServicoModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }} 
+      maxWidth="sm" 
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Adicionar Serviço</DialogTitle>
+        <DialogTitle>{servico ? 'Editar Serviço' : 'Adicionar Serviço'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <TextField

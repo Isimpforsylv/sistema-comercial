@@ -25,7 +25,7 @@ import {
   DialogContentText,
   DialogActions,
 } from '@mui/material';
-import { Add, ExpandMore, Info, SubdirectoryArrowRight, Delete } from '@mui/icons-material';
+import { Add, ExpandMore, Info, SubdirectoryArrowRight, Delete, Edit } from '@mui/icons-material';
 import ValorModal from '../ValorModal';
 
 interface ValoresCardProps {
@@ -63,6 +63,7 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
   const [valorToDelete, setValorToDelete] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [editingValor, setEditingValor] = useState<Valor | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -87,9 +88,31 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
     fetchValores();
   }, [empresaId, propostaId]);
 
-  const handleSuccess = () => {
+  const handleSuccess = (newValor?: any) => {
     setModalOpen(false);
-    fetchValores();
+    setEditingValor(null);
+    
+    // Se recebeu novo valor, adiciona ao estado local
+    if (newValor) {
+      const scrollY = window.scrollY;
+      
+      // Se está editando, atualiza o valor existente
+      if (editingValor) {
+        setValores((prev) => prev.map((v) => (v.id === newValor.id ? newValor : v)));
+      } else {
+        // Se está criando, adiciona ao array
+        setValores((prev) => [...prev, newValor]);
+      }
+      
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
+    }
+  };
+
+  const handleEditClick = (valor: Valor) => {
+    setEditingValor(valor);
+    setModalOpen(true);
   };
 
   const handleDeleteClick = (valorId: number) => {
@@ -107,7 +130,17 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
         { method: 'DELETE' }
       );
       if (response.ok) {
-        fetchValores();
+        // Salva posição do scroll antes de atualizar
+        const scrollY = window.scrollY;
+        
+        // Remove do estado local - igual TiposServicoCard
+        setValores((prev) => prev.filter((v) => v.id !== valorToDelete));
+        
+        // Restaura posição do scroll
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
+        
         setDeleteDialogOpen(false);
         setValorToDelete(null);
       }
@@ -215,6 +248,15 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
                             <TableCell align="right">{valor.mensalidade}</TableCell>
                             <TableCell align="right">{valor.prazo} dias</TableCell>
                             <TableCell align="center">
+                              <Tooltip title="Editar valor">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleEditClick(valor)}
+                                >
+                                  <Edit fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
                               <Tooltip title="Remover valor">
                                 <IconButton
                                   size="small"
@@ -257,13 +299,25 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
 
       <ValorModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setEditingValor(null);
+        }}
         onSuccess={handleSuccess}
         empresaId={empresaId}
         propostaId={propostaId}
+        valor={editingValor}
       />
 
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={(event, reason) => {
+          if (reason === 'backdropClick') {
+            return;
+          }
+          handleDeleteCancel();
+        }}
+      >
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <DialogContentText>

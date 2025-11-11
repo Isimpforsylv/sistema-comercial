@@ -13,14 +13,18 @@ import {
 } from '@mui/material';
 import { Search, Add, Business } from '@mui/icons-material';
 import Header from '@/app/components/Header';
+import PageLoader from '@/app/components/PageLoader';
 import EmpresaModal from './components/EmpresaModal';
 import { Empresa } from '@/models/empresa';
+import { usePageLoading } from '@/hooks/usePageLoading';
 
 export default function EmpresasPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const pageLoading = usePageLoading();
 
   const fetchEmpresas = async (search = '') => {
     try {
@@ -35,6 +39,7 @@ export default function EmpresasPage() {
       console.error('Erro ao buscar empresas:', error);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
@@ -47,10 +52,25 @@ export default function EmpresasPage() {
     fetchEmpresas(value);
   };
 
-  const handleEmpresaCreated = () => {
+  const handleEmpresaCreated = async () => {
+    // Salva posição do scroll antes de atualizar
+    const scrollY = window.scrollY;
+    
     setModalOpen(false);
-    fetchEmpresas(searchTerm);
+    
+    // Recarrega empresas
+    await fetchEmpresas(searchTerm);
+    
+    // Restaura posição do scroll imediatamente após renderizar
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   };
+
+  // Mostra loading enquanto página carrega OU durante carregamento inicial dos dados
+  if (pageLoading || initialLoad) {
+    return <PageLoader />;
+  }
 
   return (
     <>

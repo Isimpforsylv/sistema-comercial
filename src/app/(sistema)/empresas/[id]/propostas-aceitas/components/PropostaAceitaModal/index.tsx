@@ -43,7 +43,17 @@ export default function PropostaAceitaModal({ open, onClose, onSuccess, empresaI
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }} 
+      maxWidth="sm" 
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>Nova Proposta Aceita</DialogTitle>
         <DialogContent>

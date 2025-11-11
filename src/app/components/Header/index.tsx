@@ -2,7 +2,7 @@
 
 import { AppBar, Toolbar, Box, IconButton, Button } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { Brightness4, Brightness7, Logout } from '@mui/icons-material';
+import { Brightness4, Brightness7, Logout, ArrowBack } from '@mui/icons-material';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useTheme } from '../ThemeProvider';
@@ -32,13 +32,23 @@ export default function Header({ showLogout = true }: HeaderProps) {
     }
   };
 
+  const handleGoBack = () => {
+    router.back();
+  };
+
   if (!mounted) return null;
   const isLoginPage = pathname === '/login';
+  const isHomePage = pathname === '/empresas';
 
   return (
     <AppBar position="sticky" color="default" elevation={1}>
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {!isLoginPage && !isHomePage && (
+            <IconButton onClick={handleGoBack} color="inherit" sx={{ mr: 1 }}>
+              <ArrowBack />
+            </IconButton>
+          )}
           {isLoginPage ? (
             <Image
               src="https://tickets.ideia2001.com.br/_next/static/media/logo-ideia.635711bc.svg"

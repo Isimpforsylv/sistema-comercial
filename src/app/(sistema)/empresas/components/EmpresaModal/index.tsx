@@ -98,7 +98,17 @@ export default function EmpresaModal({ open, onClose, onSuccess }: EmpresaModalP
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') {
+          return;
+        }
+        handleClose();
+      }} 
+      maxWidth="sm" 
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>Nova Empresa</DialogTitle>
         <DialogContent>

@@ -4,11 +4,13 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { Container, Typography, Box } from '@mui/material';
 import Header from '@/app/components/Header';
+import PageLoader from '@/app/components/PageLoader';
 import PreChecklistCard from './components/PreChecklistCard';
 import ChecklistCard from './components/ChecklistCard';
 import ValidacaoDesenvolvimentoCard from './components/ValidacaoDesenvolvimentoCard';
 import AssinaturaContratoCard from './components/AssinaturaContratoCard';
 import ObservacoesCard, { ObservacoesCardHandle } from './components/ObservacoesCard';
+import { usePageLoading } from '@/hooks/usePageLoading';
 
 export default function ChecklistPage() {
   const params = useParams();
@@ -18,6 +20,7 @@ export default function ChecklistPage() {
   const [mounted, setMounted] = useState(false);
   const [etapasFinalizadas, setEtapasFinalizadas] = useState<string[]>([]);
   const observacoesRef = useRef<ObservacoesCardHandle>(null);
+  const pageLoading = usePageLoading();
 
   const handleEtapaStatusChange = (nometapa: string, finalizada: boolean) => {
     setEtapasFinalizadas((prev) => {
@@ -33,7 +36,9 @@ export default function ChecklistPage() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
+  if (pageLoading || !mounted) {
+    return <PageLoader />;
+  }
 
   return (
     <>

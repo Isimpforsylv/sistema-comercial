@@ -1,8 +1,9 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import getTheme from '@/theme/theme';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -12,20 +13,22 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  mode: 'dark',
+  mode: 'light',
   toggleTheme: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>('dark');
+  const [mode, setMode] = useState<ThemeMode>('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const savedMode = localStorage.getItem('theme-mode') as ThemeMode;
     if (savedMode) {
       setMode(savedMode);
     }
+    setMounted(true);
   }, []);
 
   const toggleTheme = () => {
@@ -34,18 +37,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('theme-mode', newMode);
   };
 
-  const theme = createTheme({
-    palette: {
-      mode,
-      primary: {
-        main: '#1976d2',
-      },
-      background: {
-        default: mode === 'dark' ? '#1a1a1a' : '#f5f5f5',
-        paper: mode === 'dark' ? '#2d2d2d' : '#ffffff',
-      },
-    },
-  });
+  const theme = getTheme(mode);
+
+  // Evita flash de tema incorreto durante hidratação
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme }}>

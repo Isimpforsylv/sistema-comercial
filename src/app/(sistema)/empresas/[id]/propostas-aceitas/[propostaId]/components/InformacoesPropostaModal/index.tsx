@@ -15,7 +15,7 @@ import {
 interface InformacoesPropostaModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (data?: any) => void;
   empresaId: string | string[];
   propostaId: string | string[];
   informacoes: any;
@@ -80,7 +80,8 @@ export default function InformacoesPropostaModal({
         body: JSON.stringify(formData),
       });
       if (response.ok) {
-        onSuccess();
+        const data = await response.json();
+        onSuccess(data); // Passa os dados atualizados
       }
     } catch (error) {
       console.error('Erro ao salvar informações:', error);
@@ -94,7 +95,17 @@ export default function InformacoesPropostaModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }} 
+      maxWidth="md" 
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {informacoes ? 'Editar Informações da Proposta' : 'Cadastrar Informações da Proposta'}

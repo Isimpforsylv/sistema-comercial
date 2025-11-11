@@ -9,6 +9,7 @@ import {
   Button,
   TextField,
 } from '@mui/material';
+import { createModalCloseHandler } from '@/utils/modalUtils';
 
 interface ObservacaoModalProps {
   open: boolean;
@@ -49,7 +50,18 @@ export default function ObservacaoModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={(event, reason) => {
+        // Só bloqueia fechar ao clicar fora (backdrop)
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }}
+      maxWidth="sm" 
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>Adicionar Observação - {nometapa}</DialogTitle>
         <DialogContent>

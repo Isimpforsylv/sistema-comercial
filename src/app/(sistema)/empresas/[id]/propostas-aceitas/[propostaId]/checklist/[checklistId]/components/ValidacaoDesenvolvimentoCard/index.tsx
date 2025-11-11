@@ -104,7 +104,7 @@ export default function ValidacaoDesenvolvimentoCard({ checklistId, onObservacao
         } else {
           setEtapa((prev) => ({ ...prev, [field]: value }));
         }
-        fetchEtapa();
+        // Removido fetchEtapa() - atualização local apenas
       }
     } catch (error) {
       console.error('Erro ao atualizar data:', error);

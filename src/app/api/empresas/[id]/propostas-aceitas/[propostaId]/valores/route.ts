@@ -74,7 +74,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(valor, { status: 201 });
+    // Retorna o valor com os recursos incluídos
+    const valorCompleto = await prisma.valoresPropostasAceitas.findUnique({
+      where: { id: valor.id },
+      include: {
+        recursos: true,
+      },
+    });
+
+    return NextResponse.json(valorCompleto, { status: 201 });
   } catch (error) {
     console.error('Erro ao criar valor:', error);
     return NextResponse.json({ error: 'Erro ao criar valor' }, { status: 500 });

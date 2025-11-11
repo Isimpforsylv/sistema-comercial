@@ -11,7 +11,9 @@ import {
   CardContent,
 } from '@mui/material';
 import Header from '@/app/components/Header';
+import PageLoader from '@/app/components/PageLoader';
 import PropostaAceitaModal from './components/PropostaAceitaModal';
+import { usePageLoading } from '@/hooks/usePageLoading';
 
 interface PropostaAceita {
   id: number;
@@ -25,6 +27,8 @@ export default function PropostasAceitasPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [propostas, setPropostas] = useState<PropostaAceita[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const pageLoading = usePageLoading();
 
   const fetchPropostas = async () => {
     setLoading(true);
@@ -33,9 +37,10 @@ export default function PropostasAceitasPage() {
       const data = await response.json();
       setPropostas(data);
     } catch (error) {
-      setPropostas([]);
+      console.error('Erro ao buscar propostas:', error);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
@@ -43,10 +48,24 @@ export default function PropostasAceitasPage() {
     if (empresaId) fetchPropostas();
   }, [empresaId]);
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
+    // Salva posição do scroll antes de atualizar
+    const scrollY = window.scrollY;
+    
     setModalOpen(false);
-    fetchPropostas();
+    
+    // Recarrega propostas
+    await fetchPropostas();
+    
+    // Restaura posição do scroll imediatamente após renderizar
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   };
+
+  if (pageLoading || initialLoad) {
+    return <PageLoader />;
+  }
 
   return (
     <>

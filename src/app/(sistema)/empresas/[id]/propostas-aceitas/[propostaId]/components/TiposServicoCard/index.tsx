@@ -12,9 +12,13 @@ import {
   ListItemText,
   Chip,
   IconButton,
-  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
-import { Add, OpenInNew } from '@mui/icons-material';
+import { Add, Delete, Edit } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import ServicoModal from '../ServicoModal';
 
@@ -41,6 +45,10 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [servicoToDelete, setServicoToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [editingServico, setEditingServico] = useState<Servico | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -66,9 +74,31 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
     fetchServicos();
   }, [empresaId, propostaId]);
 
-  const handleSuccess = () => {
+  const handleSuccess = (newServico?: any) => {
     setModalOpen(false);
-    fetchServicos();
+    setEditingServico(null);
+    
+    // Se recebeu novo serviço, adiciona ao estado local
+    if (newServico) {
+      const scrollY = window.scrollY;
+      
+      // Se está editando, atualiza o serviço existente
+      if (editingServico) {
+        setServicos((prev) => prev.map((s) => (s.id === newServico.id ? newServico : s)));
+      } else {
+        // Se está criando, adiciona ao array
+        setServicos((prev) => [...prev, newServico]);
+      }
+      
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
+    }
+  };
+
+  const handleEditClick = (servico: Servico) => {
+    setEditingServico(servico);
+    setModalOpen(true);
   };
 
   const handleOpenServico = (servico: Servico) => {
@@ -76,6 +106,47 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
       router.push(`/empresas/${empresaId}/propostas-aceitas/${propostaId}/checklist/${servico.checklist.id}`);
     } else if (servico.tiposervico.nometiposervico === 'Melhoria' && servico.melhoria) {
       router.push(`/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${servico.melhoria.id}`);
+    }
+  };
+
+  const handleDeleteClick = (servicoId: number) => {
+    setServicoToDelete(servicoId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setServicoToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!servicoToDelete) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/servicos/${servicoToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Salva posição do scroll antes de atualizar
+        const scrollY = window.scrollY;
+        
+        // Remove do estado local
+        setServicos((prev) => prev.filter((s) => s.id !== servicoToDelete));
+        
+        // Restaura posição do scroll
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
+        
+        setDeleteDialogOpen(false);
+        setServicoToDelete(null);
+      }
+    } catch (error) {
+      console.error('Erro ao remover serviço:', error);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -115,15 +186,32 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
                     mb: 1,
                   }}
                   secondaryAction={
-                    <Tooltip title={`Abrir ${servico.tiposervico.nometiposervico}`}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
                       <IconButton
                         edge="end"
                         color="primary"
-                        onClick={() => handleOpenServico(servico)}
+                        onClick={() => handleEditClick(servico)}
+                        size="small"
                       >
-                        <OpenInNew />
+                        <Edit />
                       </IconButton>
-                    </Tooltip>
+                      <IconButton
+                        edge="end"
+                        color="error"
+                        onClick={() => handleDeleteClick(servico.id)}
+                        size="small"
+                      >
+                        <Delete />
+                      </IconButton>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleOpenServico(servico)}
+                        sx={{ minWidth: 80 }}
+                      >
+                        Abrir
+                      </Button>
+                    </Box>
                   }
                 >
                   <ListItemText
@@ -156,11 +244,40 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
 
       <ServicoModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setEditingServico(null);
+        }}
         onSuccess={handleSuccess}
         empresaId={empresaId}
         propostaId={propostaId}
+        servico={editingServico}
       />
+
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={(event, reason) => {
+          if (reason === 'backdropClick') {
+            return;
+          }
+          handleDeleteCancel();
+        }}
+      >
+        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Tem certeza que deseja remover este tipo de serviço? Esta ação não pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting}>
+            {deleting ? 'Removendo...' : 'Remover'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
