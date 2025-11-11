@@ -13,6 +13,13 @@ export async function GET(request: NextRequest) {
 
     const observacoes = await prisma.checklistObservacoes.findMany({
       where: { idchecklist: checklistId },
+      select: {
+        id: true,
+        nometapa: true,
+        observacao: true,
+        criadopor: true,
+        criadoem: true,
+      },
       orderBy: { criadoem: 'asc' },
     });
 

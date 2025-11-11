@@ -9,7 +9,6 @@ import {
   Button,
   TextField,
 } from '@mui/material';
-import { createModalCloseHandler } from '@/utils/modalUtils';
 
 interface ObservacaoModalProps {
   open: boolean;

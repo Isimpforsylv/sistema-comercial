@@ -24,7 +24,7 @@ export async function PUT(request: NextRequest) {
         data: {
           finalizada: false,
           datafim: null,
-        },
+        } as any, // Type assertion: campo existe no DB mas TypeScript não reconhece
       });
     } else {
       // Finaliza a etapa
@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest) {
         data: {
           finalizada: true,
           datafim: new Date(datafim),
-        },
+        } as any, // Type assertion: campo existe no DB mas TypeScript não reconhece
       });
     }
 

@@ -12,14 +12,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Parâmetros inválidos' }, { status: 400 });
     }
 
+    // Busca apenas os campos necessários
     const etapa = await prisma.checklistEtapas.findFirst({
       where: {
         idchecklist: checklistId,
         nometapa,
       },
-    });
+    }) as any; // Type assertion temporário até Prisma Client sincronizar
 
-    return NextResponse.json(etapa || null);
+    // Retorna apenas os campos que serão usados pelo frontend
+    if (etapa) {
+      return NextResponse.json({
+        id: etapa.id,
+        dataenvio: etapa.dataenvio,
+        dataretorno: etapa.dataretorno,
+        cobrarem: etapa.cobrarem,
+        historicodataenvio: etapa.historicodataenvio,
+        historicodataretorno: etapa.historicodataretorno,
+        finalizada: etapa.finalizada,
+        datafim: etapa.datafim,
+      });
+    }
+
+    return NextResponse.json(null);
   } catch (error) {
     console.error('Erro ao buscar etapa:', error);
     return NextResponse.json({ error: 'Erro ao buscar etapa' }, { status: 500 });

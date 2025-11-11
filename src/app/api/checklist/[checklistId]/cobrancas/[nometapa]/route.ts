@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Parâmetros inválidos' }, { status: 400 });
     }
 
-    const cobrancas = await prisma.checklistCobrancas.findMany({
+    const cobrancas = await (prisma as any).checklistCobrancas.findMany({
       where: {
         idchecklist: checklistId,
         nometapa,
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const { datacobranca, quandofcobrado, proximacobranca, observacao } = body;
 
     // Salvar cobrança
-    const novaCobranca = await prisma.checklistCobrancas.create({
+    const novaCobranca = await (prisma as any).checklistCobrancas.create({
       data: {
         idchecklist: checklistId,
         nometapa,

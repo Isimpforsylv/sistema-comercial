@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,219 +20,215 @@ model Usuarios {
 }
 
 model EmpresasGrupo {
-  id        Int       @id @default(autoincrement())
-  nomegrupo String    @db.VarChar(255)
+  id        Int        @id @default(autoincrement())
+  nomegrupo String     @db.VarChar(255)
   empresas  Empresas[]
 
   @@map("empresas_grupo")
 }
 
 model Empresas {
-  id             Int             @id @default(autoincrement())
-  idgrupo        Int?
-  nomeempresa    String          @db.VarChar(255)
-  codigoempresa  String          @db.VarChar(100)
-  cliente        Boolean         @default(false)
-  criadopor      String          @db.VarChar(255)
-  criadoem       DateTime        @default(now())
-  atualizadoem   DateTime        @updatedAt
-  
-  grupo          EmpresasGrupo?  @relation(fields: [idgrupo], references: [id])
-
+  id               Int                @id @default(autoincrement())
+  idgrupo          Int?
+  nomeempresa      String             @db.VarChar(255)
+  codigoempresa    String             @db.VarChar(100)
+  cliente          Boolean            @default(false)
+  criadopor        String             @db.VarChar(255)
+  criadoem         DateTime           @default(now())
+  atualizadoem     DateTime           @updatedAt
+  grupo            EmpresasGrupo?     @relation(fields: [idgrupo], references: [id])
   propostasAceitas PropostasAceitas[]
 
+  @@index([idgrupo], map: "empresas_idgrupo_fkey")
   @@map("empresas")
 }
 
 model PropostasAceitas {
-  id           Int      @id @default(autoincrement())
+  id           Int                          @id @default(autoincrement())
   idempresa    Int
-  nomeproposta String   @db.VarChar(255)
-  criadoem     DateTime @default(now())
-  atualizadoem DateTime @updatedAt
-
-  empresa      Empresas @relation(fields: [idempresa], references: [id])
+  nomeproposta String                       @db.VarChar(255)
+  criadoem     DateTime                     @default(now())
+  atualizadoem DateTime                     @updatedAt
   informacoes  InformacoesPropostasAceitas?
-  valores      ValoresPropostasAceitas[]
+  empresa      Empresas                     @relation(fields: [idempresa], references: [id])
   servicos     ServicosPropostasAceitas[]
+  valores      ValoresPropostasAceitas[]
 
+  @@index([idempresa], map: "propostas_aceitas_idempresa_fkey")
   @@map("propostas_aceitas")
 }
 
 model InformacoesPropostasAceitas {
-  id            Int      @id @default(autoincrement())
-  idproposta    Int      @unique
-  empresa       String   @db.VarChar(255)
-  pais          String   @db.VarChar(100)
-  estado        String   @db.VarChar(100)
-  cidade        String   @db.VarChar(255)
-  endereco      String   @db.VarChar(500)
-  contato       String   @db.VarChar(255)
-  email         String   @db.VarChar(255)
-  telefone      String   @db.VarChar(50)
-  linkwiki      String   @db.VarChar(500)
-  caminhopasta  String   @db.VarChar(500) @default("\\\\serverideia2\\Comercial")
-  dataaceite    DateTime @default(now())
-  criadopor     String   @db.VarChar(255) @default("Sistema")
-  atualizadopor String   @db.VarChar(255) @default("Sistema")
-  criadoem      DateTime @default(now())
-  atualizadoem  DateTime @updatedAt
-
+  id            Int              @id @default(autoincrement())
+  idproposta    Int              @unique
+  empresa       String           @db.VarChar(255)
+  pais          String           @db.VarChar(100)
+  estado        String           @db.VarChar(100)
+  cidade        String           @db.VarChar(255)
+  endereco      String           @db.VarChar(500)
+  contato       String           @db.VarChar(255)
+  email         String           @db.VarChar(255)
+  telefone      String           @db.VarChar(50)
+  linkwiki      String           @db.VarChar(500)
+  caminhopasta  String           @default("\\serverideia2Comercial") @db.VarChar(500)
+  criadoem      DateTime         @default(now())
+  atualizadoem  DateTime         @updatedAt
+  atualizadopor String           @default("Sistema") @db.VarChar(255)
+  criadopor     String           @default("Sistema") @db.VarChar(255)
+  dataaceite    DateTime         @default(now())
   proposta      PropostasAceitas @relation(fields: [idproposta], references: [id])
 
   @@map("informacoespropostas_aceitas")
 }
 
 model ValoresPropostasAceitas {
-  id                    Int      @id @default(autoincrement())
-  idproposta            Int
-  nomevalor             String   @db.VarChar(255)
-  valor                 String   @db.VarChar(100)
-  formapagamento        String   @db.VarChar(255)
-  mensalidade           String   @db.VarChar(100)
-  alteracaomensalidade  String   @db.VarChar(255)
-  prazo                 String   @db.VarChar(255)
-  observacao            String   @db.Text
-  criadopor             String   @db.VarChar(255) @default("Sistema")
-  atualizadopor         String   @db.VarChar(255) @default("Sistema")
-  criadoem              DateTime @default(now())
-  atualizadoem          DateTime @updatedAt
+  id                   Int                               @id @default(autoincrement())
+  idproposta           Int
+  nomevalor            String                            @db.VarChar(255)
+  valor                String                            @db.VarChar(100)
+  formapagamento       String                            @db.VarChar(255)
+  mensalidade          String                            @db.VarChar(100)
+  alteracaomensalidade String                            @db.VarChar(255)
+  prazo                String                            @db.VarChar(255)
+  observacao           String                            @db.Text
+  criadopor            String                            @default("Sistema") @db.VarChar(255)
+  atualizadopor        String                            @default("Sistema") @db.VarChar(255)
+  criadoem             DateTime                          @default(now())
+  atualizadoem         DateTime                          @updatedAt
+  recursos             RecursosValoresPropostasAceitas[]
+  proposta             PropostasAceitas                  @relation(fields: [idproposta], references: [id])
 
-  proposta              PropostasAceitas @relation(fields: [idproposta], references: [id])
-  recursos              RecursosValoresPropostasAceitas[]
-
+  @@index([idproposta], map: "valorespropostas_aceitas_idproposta_fkey")
   @@map("valorespropostas_aceitas")
 }
 
 model ListaRecursos {
-  id           Int      @id @default(autoincrement())
-  nomerecurso  String   @db.VarChar(255)
-  
+  id          Int    @id @default(autoincrement())
+  nomerecurso String @db.VarChar(255)
+
   @@map("listarecursos")
 }
 
 model RecursosValoresPropostasAceitas {
-  id              Int      @id @default(autoincrement())
-  idvalor         Int
-  nomerecurso     String   @db.VarChar(255)
-  valor           String   @db.VarChar(100)
-  formapagamento  String   @db.VarChar(255)
-  prazo           String   @db.VarChar(255)
-  criadopor       String   @db.VarChar(255) @default("Sistema")
-  atualizadopor   String   @db.VarChar(255) @default("Sistema")
-  criadoem        DateTime @default(now())
-  atualizadoem    DateTime @updatedAt
+  id             Int                     @id @default(autoincrement())
+  idvalor        Int
+  nomerecurso    String                  @db.VarChar(255)
+  valor          String                  @db.VarChar(100)
+  formapagamento String                  @db.VarChar(255)
+  prazo          String                  @db.VarChar(255)
+  criadopor      String                  @default("Sistema") @db.VarChar(255)
+  atualizadopor  String                  @default("Sistema") @db.VarChar(255)
+  criadoem       DateTime                @default(now())
+  atualizadoem   DateTime                @updatedAt
+  valor_ref      ValoresPropostasAceitas @relation(fields: [idvalor], references: [id], onDelete: Cascade)
 
-  valor_ref       ValoresPropostasAceitas @relation(fields: [idvalor], references: [id], onDelete: Cascade)
-
+  @@index([idvalor], map: "recursosvalorespropostas_aceitas_idvalor_fkey")
   @@map("recursosvalorespropostas_aceitas")
 }
 
 model TipoServico {
-  id              Int      @id @default(autoincrement())
-  nometiposervico String   @db.VarChar(255)
-  
+  id              Int                        @id @default(autoincrement())
+  nometiposervico String                     @db.VarChar(255)
   servicos        ServicosPropostasAceitas[]
 
   @@map("tiposervico")
 }
 
 model ServicosPropostasAceitas {
-  id             Int      @id @default(autoincrement())
-  idproposta     Int
-  idtiposervico  Int
-  nomedescricao  String   @db.VarChar(255)
-  criadopor      String   @db.VarChar(255) @default("Sistema")
-  atualizadopor  String   @db.VarChar(255) @default("Sistema")
-  criadoem       DateTime @default(now())
-  atualizadoem   DateTime @updatedAt
+  id            Int              @id @default(autoincrement())
+  idproposta    Int
+  idtiposervico Int
+  nomedescricao String           @db.VarChar(255)
+  criadopor     String           @default("Sistema") @db.VarChar(255)
+  atualizadopor String           @default("Sistema") @db.VarChar(255)
+  criadoem      DateTime         @default(now())
+  atualizadoem  DateTime         @updatedAt
+  checklist     Checklist?
+  melhoria      Melhoria?
+  proposta      PropostasAceitas @relation(fields: [idproposta], references: [id])
+  tiposervico   TipoServico      @relation(fields: [idtiposervico], references: [id])
 
-  proposta       PropostasAceitas @relation(fields: [idproposta], references: [id])
-  tiposervico    TipoServico @relation(fields: [idtiposervico], references: [id])
-  checklist      Checklist?
-  melhoria       Melhoria?
-
+  @@index([idproposta], map: "servicospropostas_aceitas_idproposta_fkey")
+  @@index([idtiposervico], map: "servicospropostas_aceitas_idtiposervico_fkey")
   @@map("servicospropostas_aceitas")
 }
 
 model Checklist {
-  id            Int      @id @default(autoincrement())
-  idservico     Int      @unique
-  criadopor     String   @db.VarChar(255) @default("Sistema")
-  atualizadopor String   @db.VarChar(255) @default("Sistema")
-  criadoem      DateTime @default(now())
-  atualizadoem  DateTime @updatedAt
-
+  id            Int                      @id @default(autoincrement())
+  idservico     Int                      @unique
+  criadopor     String                   @default("Sistema") @db.VarChar(255)
+  atualizadopor String                   @default("Sistema") @db.VarChar(255)
+  criadoem      DateTime                 @default(now())
+  atualizadoem  DateTime                 @updatedAt
   servico       ServicosPropostasAceitas @relation(fields: [idservico], references: [id], onDelete: Cascade)
+  cobrancas     ChecklistCobrancas[]
   etapas        ChecklistEtapas[]
   observacoes   ChecklistObservacoes[]
-  cobrancas     ChecklistCobrancas[]
 
   @@map("checklist")
 }
 
 model ChecklistEtapas {
-  id                    Int       @id @default(autoincrement())
-  idchecklist           Int
-  nometapa              String    @db.VarChar(255)
-  dataenvio             DateTime?
-  dataretorno           DateTime?
-  cobrarem              DateTime?
-  historicodataenvio    String?   @db.Text
-  historicodataretorno  String?   @db.Text
-  finalizada            Boolean   @default(false)
-  datafim               DateTime?
-  criadopor             String    @db.VarChar(255) @default("Sistema")
-  atualizadopor         String    @db.VarChar(255) @default("Sistema")
-  criadoem              DateTime  @default(now())
-  atualizadoem          DateTime  @updatedAt
+  id                   Int       @id @default(autoincrement())
+  idchecklist          Int
+  nometapa             String    @db.VarChar(255)
+  dataenvio            DateTime?
+  dataretorno          DateTime?
+  cobrarem             DateTime?
+  historicodataenvio   String?   @db.Text
+  historicodataretorno String?   @db.Text
+  criadopor            String    @default("Sistema") @db.VarChar(255)
+  atualizadopor        String    @default("Sistema") @db.VarChar(255)
+  criadoem             DateTime  @default(now())
+  atualizadoem         DateTime  @updatedAt
+  datafim              DateTime?
+  finalizada           Boolean   @default(false)
+  checklist            Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
 
-  checklist             Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
-
+  @@index([idchecklist], map: "checklist_etapas_idchecklist_fkey")
   @@map("checklist_etapas")
 }
 
 model ChecklistObservacoes {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   idchecklist   Int
-  nometapa      String   @db.VarChar(255)
-  observacao    String   @db.Text
-  criadopor     String   @db.VarChar(255) @default("Sistema")
-  atualizadopor String   @db.VarChar(255) @default("Sistema")
-  criadoem      DateTime @default(now())
-  atualizadoem  DateTime @updatedAt
-
+  nometapa      String    @db.VarChar(255)
+  observacao    String    @db.Text
+  criadopor     String    @default("Sistema") @db.VarChar(255)
+  atualizadopor String    @default("Sistema") @db.VarChar(255)
+  criadoem      DateTime  @default(now())
+  atualizadoem  DateTime  @updatedAt
   checklist     Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
 
+  @@index([idchecklist], map: "checklist_observacoes_idchecklist_fkey")
   @@map("checklist_observacoes")
 }
 
 model ChecklistCobrancas {
-  id               Int      @id @default(autoincrement())
-  idchecklist      Int
-  nometapa         String   @db.VarChar(255)
-  datacobranca     DateTime
-  quandofcobrado   DateTime
-  proximacobranca  DateTime
-  observacao       String?  @db.Text
-  criadopor        String   @db.VarChar(255) @default("Sistema")
-  atualizadopor    String   @db.VarChar(255) @default("Sistema")
-  criadoem         DateTime @default(now())
-  atualizadoem     DateTime @updatedAt
+  id              Int       @id @default(autoincrement())
+  idchecklist     Int
+  nometapa        String    @db.VarChar(255)
+  datacobranca    DateTime
+  quandofcobrado  DateTime
+  proximacobranca DateTime
+  observacao      String?   @db.Text
+  criadopor       String    @default("Sistema") @db.VarChar(255)
+  atualizadopor   String    @default("Sistema") @db.VarChar(255)
+  criadoem        DateTime  @default(now())
+  atualizadoem    DateTime  @updatedAt
+  checklist       Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
 
-  checklist        Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
-
+  @@index([idchecklist], map: "checklist_cobrancas_idchecklist_fkey")
   @@map("checklist_cobrancas")
 }
 
 model Melhoria {
-  id            Int      @id @default(autoincrement())
-  idservico     Int      @unique
-  criadopor     String   @db.VarChar(255) @default("Sistema")
-  atualizadopor String   @db.VarChar(255) @default("Sistema")
-  criadoem      DateTime @default(now())
-  atualizadoem  DateTime @updatedAt
-
+  id            Int                      @id @default(autoincrement())
+  idservico     Int                      @unique
+  criadopor     String                   @default("Sistema") @db.VarChar(255)
+  atualizadopor String                   @default("Sistema") @db.VarChar(255)
+  criadoem      DateTime                 @default(now())
+  atualizadoem  DateTime                 @updatedAt
   servico       ServicosPropostasAceitas @relation(fields: [idservico], references: [id], onDelete: Cascade)
 
   @@map("melhoria")
