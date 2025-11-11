@@ -13,8 +13,12 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  Tabs,
+  Tab,
+  Button,
 } from '@mui/material';
-import { ExpandMore } from '@mui/icons-material';
+import { ExpandMore, Settings } from '@mui/icons-material';
+import PendenciasModal from '../PendenciasModal';
 
 interface ObservacoesCardProps {
   checklistId: string | string[];
@@ -41,6 +45,8 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [tabValue, setTabValue] = useState(0);
+  const [pendenciasModalOpen, setPendenciasModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -87,11 +93,20 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
   if (loading || !mounted) return <Typography>Carregando...</Typography>;
 
   return (
-    <Card sx={{ position: 'sticky', top: 20 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Observações
-        </Typography>
+    <>
+      <Card sx={{ position: 'sticky', top: 20 }}>
+        <CardContent>
+          <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 2 }}>
+            <Tab label="Observações" />
+            <Tab label="Pendências" />
+          </Tabs>
+
+          {/* Tab Observações */}
+          {tabValue === 0 && (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Observações
+              </Typography>
         
         {Object.keys(observacoes).length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -137,8 +152,40 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
             })}
           </Box>
         )}
+            </>
+          )}
+
+          {/* Tab Pendências */}
+          {tabValue === 1 && (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Gerenciar Pendências
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Controle as pendências impeditivas e não impeditivas do checklist
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<Settings />}
+                onClick={() => setPendenciasModalOpen(true)}
+              >
+                Gerenciar Pendências
+              </Button>
+            </Box>
+          )}
       </CardContent>
     </Card>
+
+    <PendenciasModal
+      open={pendenciasModalOpen}
+      onClose={() => setPendenciasModalOpen(false)}
+      onSuccess={() => {
+        setPendenciasModalOpen(false);
+        fetchObservacoes();
+      }}
+      checklistId={checklistId}
+    />
+    </>
   );
 });
 

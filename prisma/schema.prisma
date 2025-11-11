@@ -164,6 +164,7 @@ model Checklist {
   cobrancas     ChecklistCobrancas[]
   etapas        ChecklistEtapas[]
   observacoes   ChecklistObservacoes[]
+  pendencias    ChecklistPendencias[]
 
   @@map("checklist")
 }
@@ -220,6 +221,22 @@ model ChecklistCobrancas {
 
   @@index([idchecklist], map: "checklist_cobrancas_idchecklist_fkey")
   @@map("checklist_cobrancas")
+}
+
+model ChecklistPendencias {
+  id            Int       @id @default(autoincrement())
+  idchecklist   Int
+  descricao     String    @db.Text
+  impeditiva    Boolean   @default(false)
+  finalizada    Boolean   @default(false)
+  criadopor     String    @default("Sistema") @db.VarChar(255)
+  finalizadopor String?   @db.VarChar(255)
+  criadoem      DateTime  @default(now())
+  atualizadoem  DateTime  @updatedAt
+  checklist     Checklist @relation(fields: [idchecklist], references: [id], onDelete: Cascade)
+
+  @@index([idchecklist], map: "checklist_pendencias_idchecklist_fkey")
+  @@map("checklist_pendencias")
 }
 
 model Melhoria {
