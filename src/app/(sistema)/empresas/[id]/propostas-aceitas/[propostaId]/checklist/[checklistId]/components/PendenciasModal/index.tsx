@@ -85,7 +85,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
         setDescricao('');
         setImpeditiva(false);
         fetchPendencias();
-        onSuccess();
+        // NÃO chama onSuccess() para manter o modal aberto
       }
     } catch (error) {
       console.error('Erro ao adicionar pendência:', error);
@@ -104,7 +104,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
 
       if (response.ok) {
         fetchPendencias();
-        onSuccess();
+        // NÃO chama onSuccess() para manter o modal aberto
       }
     } catch (error) {
       console.error('Erro ao atualizar pendência:', error);
@@ -125,7 +125,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
         setEditando(null);
         setDescricaoEdit('');
         fetchPendencias();
-        onSuccess();
+        // NÃO chama onSuccess() para manter o modal aberto
       }
     } catch (error) {
       console.error('Erro ao editar pendência:', error);
@@ -142,7 +142,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
 
       if (response.ok) {
         fetchPendencias();
-        onSuccess();
+        // NÃO chama onSuccess() para manter o modal aberto
       }
     } catch (error) {
       console.error('Erro ao deletar pendência:', error);
@@ -160,7 +160,13 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
   return (
     <Dialog 
       open={open} 
-      onClose={onClose} 
+      onClose={(event, reason) => {
+        // Bloqueia fechar ao clicar fora (backdrop)
+        if (reason === 'backdropClick') {
+          return;
+        }
+        onClose();
+      }}
       maxWidth="lg" 
       fullWidth
       PaperProps={{
@@ -381,7 +387,13 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
         </Box>
 
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button onClick={onClose} variant="contained">
+          <Button 
+            onClick={() => {
+              onSuccess(); // Atualiza a lista na aba antes de fechar
+              onClose();
+            }} 
+            variant="contained"
+          >
             Fechar
           </Button>
         </Box>

@@ -40,8 +40,19 @@ interface ObservacoesPorEtapa {
   [nometapa: string]: Observacao[];
 }
 
+interface Pendencia {
+  id: number;
+  descricao: string;
+  impeditiva: boolean;
+  finalizada: boolean;
+  criadopor: string;
+  finalizadopor: string | null;
+  criadoem: string;
+}
+
 const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(({ checklistId, etapasFinalizadas = [] }, ref) => {
   const [observacoes, setObservacoes] = useState<ObservacoesPorEtapa>({});
+  const [pendencias, setPendencias] = useState<Pendencia[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -80,14 +91,30 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
     }
   };
 
+  const fetchPendencias = async () => {
+    try {
+      const response = await fetch(`/api/checklist/${checklistId}/pendencias`);
+      if (response.ok) {
+        const data = await response.json();
+        setPendencias(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar pendências:', error);
+    }
+  };
+
   useEffect(() => {
     if (mounted) {
       fetchObservacoes();
+      fetchPendencias();
     }
   }, [checklistId, mounted]);
 
   useImperativeHandle(ref, () => ({
-    refresh: fetchObservacoes
+    refresh: () => {
+      fetchObservacoes();
+      fetchPendencias();
+    }
   }));
 
   if (loading || !mounted) return <Typography>Carregando...</Typography>;
@@ -157,21 +184,96 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
 
           {/* Tab Pendências */}
           {tabValue === 1 && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" gutterBottom>
-                Gerenciar Pendências
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Controle as pendências impeditivas e não impeditivas do checklist
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<Settings />}
-                onClick={() => setPendenciasModalOpen(true)}
-              >
-                Gerenciar Pendências
-              </Button>
-            </Box>
+            <>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h6">
+                  Pendências
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<Settings />}
+                  onClick={() => setPendenciasModalOpen(true)}
+                >
+                  Gerenciar Pendências
+                </Button>
+              </Box>
+
+              {pendencias.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography color="text.secondary">
+                    Nenhuma pendência cadastrada
+                  </Typography>
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* Pendências Impeditivas */}
+                  {pendencias.filter(p => p.impeditiva).length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight="bold" color="error" sx={{ mb: 1 }}>
+                        Impeditivas ({pendencias.filter(p => p.impeditiva && !p.finalizada).length} ativas)
+                      </Typography>
+                      <List dense>
+                        {pendencias.filter(p => p.impeditiva).map((pendencia, index) => (
+                          <Box key={pendencia.id}>
+                            <ListItem 
+                              disablePadding 
+                              sx={{ 
+                                mb: 1,
+                                opacity: pendencia.finalizada ? 0.6 : 1,
+                                textDecoration: pendencia.finalizada ? 'line-through' : 'none'
+                              }}
+                            >
+                              <ListItemText
+                                primary={pendencia.descricao}
+                                secondary={
+                                  pendencia.finalizada 
+                                    ? `Finalizada por ${pendencia.finalizadopor}` 
+                                    : `Criada por ${pendencia.criadopor} em ${new Date(pendencia.criadoem).toLocaleDateString('pt-BR')}`
+                                }
+                              />
+                            </ListItem>
+                            {index < pendencias.filter(p => p.impeditiva).length - 1 && <Divider />}
+                          </Box>
+                        ))}
+                      </List>
+                    </Box>
+                  )}
+
+                  {/* Pendências Não Impeditivas */}
+                  {pendencias.filter(p => !p.impeditiva).length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight="bold" color="warning.main" sx={{ mb: 1 }}>
+                        Não Impeditivas ({pendencias.filter(p => !p.impeditiva && !p.finalizada).length} ativas)
+                      </Typography>
+                      <List dense>
+                        {pendencias.filter(p => !p.impeditiva).map((pendencia, index) => (
+                          <Box key={pendencia.id}>
+                            <ListItem 
+                              disablePadding 
+                              sx={{ 
+                                mb: 1,
+                                opacity: pendencia.finalizada ? 0.6 : 1,
+                                textDecoration: pendencia.finalizada ? 'line-through' : 'none'
+                              }}
+                            >
+                              <ListItemText
+                                primary={pendencia.descricao}
+                                secondary={
+                                  pendencia.finalizada 
+                                    ? `Finalizada por ${pendencia.finalizadopor}` 
+                                    : `Criada por ${pendencia.criadopor} em ${new Date(pendencia.criadoem).toLocaleDateString('pt-BR')}`
+                                }
+                              />
+                            </ListItem>
+                            {index < pendencias.filter(p => !p.impeditiva).length - 1 && <Divider />}
+                          </Box>
+                        ))}
+                      </List>
+                    </Box>
+                  )}
+                </Box>
+              )}
+            </>
           )}
       </CardContent>
     </Card>
@@ -182,6 +284,7 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
       onSuccess={() => {
         setPendenciasModalOpen(false);
         fetchObservacoes();
+        fetchPendencias();
       }}
       checklistId={checklistId}
     />
