@@ -139,7 +139,7 @@ export default function ValidacaoDesenvolvimentoCard({ checklistId, onObservacao
     }
   };
 
-  if (loading || !mounted) return <Typography>Carregando...</Typography>;
+  if (loading || !mounted) return null;
 
   if (etapa.finalizada) {
     return (

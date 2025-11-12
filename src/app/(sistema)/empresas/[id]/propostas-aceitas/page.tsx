@@ -11,9 +11,7 @@ import {
   CardContent,
 } from '@mui/material';
 import Header from '@/app/components/Header';
-import PageLoader from '@/app/components/PageLoader';
 import PropostaAceitaModal from './components/PropostaAceitaModal';
-import { usePageLoading } from '@/hooks/usePageLoading';
 
 interface PropostaAceita {
   id: number;
@@ -28,7 +26,6 @@ export default function PropostasAceitasPage() {
   const [propostas, setPropostas] = useState<PropostaAceita[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
-  const pageLoading = usePageLoading();
 
   const fetchPropostas = async () => {
     setLoading(true);
@@ -63,9 +60,7 @@ export default function PropostasAceitasPage() {
     });
   };
 
-  if (pageLoading || initialLoad) {
-    return <PageLoader />;
-  }
+  if (initialLoad) return null;
 
   return (
     <>
@@ -79,9 +74,7 @@ export default function PropostasAceitasPage() {
             Criar Nova Proposta
           </Button>
         </Box>
-        {loading ? (
-          <Typography>Carregando...</Typography>
-        ) : propostas.length === 0 ? (
+        {propostas.length === 0 ? (
           <Card>
             <CardContent>
               <Typography align="center" color="text.secondary">

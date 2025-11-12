@@ -68,8 +68,13 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
 
   const fetchServicos = async () => {
     setLoading(true);
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 15000);
     try {
-      const response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/servicos`);
+      const response = await fetch(
+        `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/servicos`,
+        { signal: controller.signal }
+      );
       if (response.ok) {
         const data = await response.json();
         setServicos(data);
@@ -77,6 +82,7 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
     } catch (error) {
       console.error('Erro ao buscar serviços:', error);
     } finally {
+      window.clearTimeout(timer);
       setLoading(false);
     }
   };
@@ -161,7 +167,8 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
     }
   };
 
-  if (loading) return <Typography>Carregando tipos de serviço...</Typography>;
+  // Evita textos de carregamento; overlay global cobre o carregamento inicial
+  if (loading) return null;
 
   if (!mounted) return null;
 

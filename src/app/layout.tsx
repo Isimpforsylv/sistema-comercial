@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from './components/ThemeProvider';
+import { LoadingProvider } from './components/LoadingProvider';
+import LoadingGate from './components/LoadingGate';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,7 +47,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          {children}
+          <LoadingProvider>
+            <LoadingGate>
+              {children}
+            </LoadingGate>
+          </LoadingProvider>
         </ThemeProvider>
       </body>
     </html>

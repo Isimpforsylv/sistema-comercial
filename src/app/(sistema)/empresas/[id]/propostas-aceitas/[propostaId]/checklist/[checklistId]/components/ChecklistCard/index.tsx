@@ -139,7 +139,8 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
     }
   };
 
-  if (loading || !mounted) return <Typography>Carregando...</Typography>;
+  // Evita mensagens locais de carregamento; overlay global cobre o primeiro load
+  if (loading || !mounted) return null;
 
   if (etapa.finalizada) {
     return (

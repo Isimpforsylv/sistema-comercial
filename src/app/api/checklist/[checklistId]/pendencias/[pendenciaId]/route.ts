@@ -5,12 +5,13 @@ import { getCurrentUser } from '@/lib/auth';
 // PUT - Atualizar pendência
 export async function PUT(
   request: NextRequest,
-  context: { params?: { checklistId?: string; pendenciaId?: string } }
+  context: { params: Promise<{ checklistId?: string; pendenciaId?: string }> }
 ) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    let pendenciaId = context?.params?.pendenciaId ? Number(context.params.pendenciaId) : NaN;
+    const params = context?.params ? await context.params : undefined;
+    let pendenciaId = params?.pendenciaId ? Number(params.pendenciaId) : NaN;
     if (!pendenciaId) {
       const url = new URL(request.url);
       const parts = url.pathname.split('/').filter(Boolean);
@@ -58,12 +59,13 @@ export async function PUT(
 // DELETE - Remover pendência
 export async function DELETE(
   request: NextRequest,
-  context: { params?: { checklistId?: string; pendenciaId?: string } }
+  context: { params: Promise<{ checklistId?: string; pendenciaId?: string }> }
 ) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    let pendenciaId = context?.params?.pendenciaId ? Number(context.params.pendenciaId) : NaN;
+    const params = context?.params ? await context.params : undefined;
+    let pendenciaId = params?.pendenciaId ? Number(params.pendenciaId) : NaN;
     if (!pendenciaId) {
       const url = new URL(request.url);
       const parts = url.pathname.split('/').filter(Boolean);

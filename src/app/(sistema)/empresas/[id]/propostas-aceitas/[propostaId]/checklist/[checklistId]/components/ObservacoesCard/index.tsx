@@ -118,7 +118,7 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
     }
   }));
 
-  if (loading || !mounted) return <Typography>Carregando...</Typography>;
+  if (loading || !mounted) return null;
 
   return (
     <>

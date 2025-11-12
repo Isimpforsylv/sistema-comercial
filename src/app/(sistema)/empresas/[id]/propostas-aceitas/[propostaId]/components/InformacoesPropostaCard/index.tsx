@@ -40,8 +40,13 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
 
   const fetchInformacoes = async () => {
     setLoading(true);
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 15000);
     try {
-      const response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/informacoes`);
+      const response = await fetch(
+        `/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/informacoes`,
+        { signal: controller.signal }
+      );
       if (response.ok) {
         const data = await response.json();
         setInformacoes(data);
@@ -49,6 +54,7 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
     } catch (error) {
       console.error('Erro ao buscar informações:', error);
     } finally {
+      window.clearTimeout(timer);
       setLoading(false);
     }
   };
@@ -77,7 +83,8 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
     }
   };
 
-  if (loading) return <Typography>Carregando informações...</Typography>;
+  // Evita textos de carregamento; overlay global cobre o carregamento inicial
+  if (loading) return null;
 
   if (!mounted) return null;
 

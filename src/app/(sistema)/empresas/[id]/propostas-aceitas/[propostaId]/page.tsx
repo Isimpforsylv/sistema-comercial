@@ -1,29 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Header from '@/app/components/Header';
-import PageLoader from '@/app/components/PageLoader';
 import { useParams } from 'next/navigation';
 import { Container, Typography, Box } from '@mui/material';
 import InformacoesPropostaCard from './components/InformacoesPropostaCard';
 import ValoresCard from './components/ValoresCard';
 import TiposServicoCard from './components/TiposServicoCard';
-import { usePageLoading } from '@/hooks/usePageLoading';
 
 export default function PropostaAceitaDetalhePage() {
   const params = useParams();
   const empresaId = params?.id || '';
   const propostaId = params?.propostaId || '';
-  const [mounted, setMounted] = useState(false);
-  const pageLoading = usePageLoading();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (pageLoading || !mounted) {
-    return <PageLoader />;
-  }
 
   return (
     <>

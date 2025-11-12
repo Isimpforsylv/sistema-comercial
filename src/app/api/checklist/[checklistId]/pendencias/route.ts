@@ -5,10 +5,11 @@ import { getCurrentUser } from '@/lib/auth';
 // GET - Listar todas as pendências de um checklist
 export async function GET(
   request: NextRequest,
-  context: { params?: { checklistId?: string } }
+  context: { params: Promise<{ checklistId?: string }> }
 ) {
   try {
-    let checklistId = context?.params?.checklistId ? Number(context.params.checklistId) : NaN;
+    const params = context?.params ? await context.params : undefined;
+    let checklistId = params?.checklistId ? Number(params.checklistId) : NaN;
     if (!checklistId) {
       const url = new URL(request.url);
       const parts = url.pathname.split('/').filter(Boolean);
@@ -37,12 +38,13 @@ export async function GET(
 // POST - Criar nova pendência
 export async function POST(
   request: NextRequest,
-  context: { params?: { checklistId?: string } }
+  context: { params: Promise<{ checklistId?: string }> }
 ) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    let checklistId = context?.params?.checklistId ? Number(context.params.checklistId) : NaN;
+    const params = context?.params ? await context.params : undefined;
+    let checklistId = params?.checklistId ? Number(params.checklistId) : NaN;
     if (!checklistId) {
       const url = new URL(request.url);
       const parts = url.pathname.split('/').filter(Boolean);

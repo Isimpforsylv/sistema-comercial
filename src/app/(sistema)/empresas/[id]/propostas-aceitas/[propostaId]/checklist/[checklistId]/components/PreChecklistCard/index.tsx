@@ -142,7 +142,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
     }
   };
 
-  if (loading || !mounted) return <Typography>Carregando...</Typography>;
+  if (loading || !mounted) return null;
 
   // Se a etapa estiver finalizada, renderiza como Accordion
   if (etapa.finalizada) {

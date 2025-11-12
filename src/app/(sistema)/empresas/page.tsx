@@ -13,10 +13,8 @@ import {
 } from '@mui/material';
 import { Search, Add, Business } from '@mui/icons-material';
 import Header from '@/app/components/Header';
-import PageLoader from '@/app/components/PageLoader';
 import EmpresaModal from './components/EmpresaModal';
 import { Empresa } from '@/models/empresa';
-import { usePageLoading } from '@/hooks/usePageLoading';
 
 export default function EmpresasPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -24,7 +22,6 @@ export default function EmpresasPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
-  const pageLoading = usePageLoading();
 
   const fetchEmpresas = async (search = '') => {
     try {
@@ -67,10 +64,8 @@ export default function EmpresasPage() {
     });
   };
 
-  // Mostra loading enquanto página carrega OU durante carregamento inicial dos dados
-  if (pageLoading || initialLoad) {
-    return <PageLoader />;
-  }
+  // Durante o carregamento inicial, deixe o overlay global cobrir a página
+  if (initialLoad) return null;
 
   return (
     <>
@@ -113,11 +108,7 @@ export default function EmpresasPage() {
           </CardContent>
         </Card>
 
-        {loading ? (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography>Carregando...</Typography>
-          </Box>
-        ) : empresas.length === 0 ? (
+        {empresas.length === 0 ? (
           <Card>
             <CardContent>
               <Box

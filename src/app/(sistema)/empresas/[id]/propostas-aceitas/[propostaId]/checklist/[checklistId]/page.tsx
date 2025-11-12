@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { Container, Typography, Box } from '@mui/material';
 import Header from '@/app/components/Header';
-import PageLoader from '@/app/components/PageLoader';
 import StatusSelector from '@/app/components/StatusSelector';
 import ValidationModal from '@/app/components/ValidationModal';
 import PreChecklistCard from './components/PreChecklistCard';
@@ -12,7 +11,6 @@ import ChecklistCard from './components/ChecklistCard';
 import ValidacaoDesenvolvimentoCard from './components/ValidacaoDesenvolvimentoCard';
 import AssinaturaContratoCard from './components/AssinaturaContratoCard';
 import ObservacoesCard, { ObservacoesCardHandle } from './components/ObservacoesCard';
-import { usePageLoading } from '@/hooks/usePageLoading';
 
 export default function ChecklistPage() {
   const params = useParams();
@@ -26,7 +24,6 @@ export default function ChecklistPage() {
   const [etapasNaoFinalizadas, setEtapasNaoFinalizadas] = useState<string[]>([]);
   const [pendenciasImpeditivas, setPendenciasImpeditivas] = useState<string[]>([]);
   const observacoesRef = useRef<ObservacoesCardHandle>(null);
-  const pageLoading = usePageLoading();
 
   const isFinalizado = statusChecklist === 'finalizado';
 
@@ -50,9 +47,7 @@ export default function ChecklistPage() {
     setMounted(true);
   }, []);
 
-  if (pageLoading || !mounted) {
-    return <PageLoader />;
-  }
+  if (!mounted) return null;
 
   return (
     <>

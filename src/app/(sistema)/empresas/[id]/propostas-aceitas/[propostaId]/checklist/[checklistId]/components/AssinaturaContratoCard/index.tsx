@@ -139,7 +139,7 @@ export default function AssinaturaContratoCard({ checklistId, onObservacaoAdded,
     }
   };
 
-  if (loading || !mounted) return <Typography>Carregando...</Typography>;
+  if (loading || !mounted) return null;
 
   if (etapa.finalizada) {
     return (

@@ -113,7 +113,7 @@ export default function StatusSelector({ checklistId, onStatusChange, onValidati
     }
   };
 
-  if (loading) return <Typography>Carregando...</Typography>;
+  if (loading) return null;
 
   const currentConfig = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG];
 

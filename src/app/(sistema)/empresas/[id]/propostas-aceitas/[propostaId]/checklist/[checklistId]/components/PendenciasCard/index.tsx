@@ -136,7 +136,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
     }
   };
 
-  if (loading || !mounted) return <Typography>Carregando...</Typography>;
+  if (loading || !mounted) return null;
 
   if (etapa.finalizada) {
     return (
