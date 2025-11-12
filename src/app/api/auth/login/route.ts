@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Buscar usuário por email (com select otimizado)
-    const usuario = await prisma.usuarios.findUnique({
+    const usuario = await (prisma as any).usuarios.findUnique({
       where: { email },
       select: {
         id: true,
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         email: true,
         senha: true,
         admin: true,
+        ativo: true,
       },
     });
 
@@ -31,6 +32,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: 'Credenciais inválidas' },
         { status: 401 }
+      );
+    }
+
+    // Bloquear usuários desativados
+  if (!usuario.ativo) {
+      return NextResponse.json(
+        { success: false, message: 'Usuário desativado' },
+        { status: 403 }
       );
     }
 

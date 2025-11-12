@@ -13,6 +13,7 @@ model Usuarios {
   email        String   @unique @db.VarChar(255)
   senha        String   @db.VarChar(255)
   admin        Boolean  @default(false)
+  ativo        Boolean  @default(true)
   criadoem     DateTime @default(now())
   atualizadoem DateTime @updatedAt
 
@@ -156,12 +157,12 @@ model ServicosPropostasAceitas {
 model Checklist {
   id            Int                      @id @default(autoincrement())
   idservico     Int                      @unique
-  status        String                   @default("em_andamento") @db.VarChar(50)
-  dataretorno   DateTime?
   criadopor     String                   @default("Sistema") @db.VarChar(255)
   atualizadopor String                   @default("Sistema") @db.VarChar(255)
   criadoem      DateTime                 @default(now())
   atualizadoem  DateTime                 @updatedAt
+  dataretorno   DateTime?
+  status        String                   @default("em_andamento") @db.VarChar(50)
   servico       ServicosPropostasAceitas @relation(fields: [idservico], references: [id], onDelete: Cascade)
   cobrancas     ChecklistCobrancas[]
   etapas        ChecklistEtapas[]

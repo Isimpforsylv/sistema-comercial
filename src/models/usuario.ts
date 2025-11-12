@@ -4,6 +4,7 @@ export interface Usuario {
   email: string;
   senha: string;
   admin: boolean;
+  ativo: boolean;
   criadoem: Date;
   atualizadoem: Date;
 }

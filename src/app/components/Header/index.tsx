@@ -1,12 +1,13 @@
 'use client';
 
-import { AppBar, Toolbar, Box, IconButton, Button } from '@mui/material';
+import { AppBar, Toolbar, Box, IconButton } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { Brightness4, Brightness7, Logout, ArrowBack } from '@mui/icons-material';
+import { Brightness4, Brightness7, ArrowBack } from '@mui/icons-material';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useTheme } from '../ThemeProvider';
 import { useRouter, usePathname } from 'next/navigation';
+import UserMenu from '../UserMenu';
 
 interface HeaderProps {
   showLogout?: boolean;
@@ -17,18 +18,27 @@ export default function Header({ showLogout = true }: HeaderProps) {
   const router = useRouter();
   const pathname = typeof window !== 'undefined' ? usePathname() : '';
   const [mounted, setMounted] = useState(false);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    if (showLogout && mounted) {
+      fetchUserName();
+    }
+  }, [showLogout, mounted]);
+
+  const fetchUserName = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUserName(data.user?.nome || data.nome || 'Usuário');
+      }
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      router.push('/login');
+      console.error('Erro ao buscar nome do usuário:', error);
     }
   };
 
@@ -74,14 +84,8 @@ export default function Header({ showLogout = true }: HeaderProps) {
           <IconButton onClick={toggleTheme} color="inherit">
             {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
-          {showLogout && !isLoginPage && (
-            <Button
-              startIcon={<Logout />}
-              onClick={handleLogout}
-              color="inherit"
-            >
-              Sair
-            </Button>
+          {showLogout && !isLoginPage && userName && (
+            <UserMenu userName={userName} />
           )}
         </Box>
       </Toolbar>
