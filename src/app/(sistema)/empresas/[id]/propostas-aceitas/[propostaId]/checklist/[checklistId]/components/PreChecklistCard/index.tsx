@@ -19,11 +19,13 @@ import ObservacaoModal from '../ObservacaoModal';
 import HistoricoModal from '../HistoricoModal';
 import CobrancasModal from '../CobrancasModal';
 import FinalizarModal from '../FinalizarModal';
+import ConfirmDialog from '@/app/components/ConfirmDialog';
 
 interface PreChecklistCardProps {
   checklistId: string | string[];
   onObservacaoAdded?: () => void;
   onEtapaStatusChange?: (finalizada: boolean) => void;
+  disabled?: boolean;
 }
 
 interface EtapaData {
@@ -37,7 +39,7 @@ interface EtapaData {
   datafim?: string;
 }
 
-export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEtapaStatusChange }: PreChecklistCardProps) {
+export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEtapaStatusChange, disabled = false }: PreChecklistCardProps) {
   const [etapa, setEtapa] = useState<EtapaData>({
     dataenvio: '',
     dataretorno: '',
@@ -51,6 +53,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
   const [historicoModalOpen, setHistoricoModalOpen] = useState(false);
   const [cobrancasModalOpen, setCobrancasModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
+  const [confirmDesfinalizarOpen, setConfirmDesfinalizarOpen] = useState(false);
   const [historicoTipo, setHistoricoTipo] = useState<'dataenvio' | 'dataretorno'>('dataenvio');
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -120,8 +123,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
   };
 
   const handleDesfinalizar = async () => {
-    if (!confirm('Deseja realmente desfinalizar esta etapa?')) return;
-    
+    console.log('handleDesfinalizar chamado - Pre-Checklist');
     try {
       const response = await fetch(`/api/checklist/${checklistId}/etapas/Pre-Checklist/finalizar`, {
         method: 'PUT',
@@ -129,9 +131,11 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
         body: JSON.stringify({ desfinalizar: true }),
       });
 
+      console.log('Response status:', response.status);
       if (response.ok) {
-        fetchEtapa();
+        await fetchEtapa();
         onObservacaoAdded?.();
+        onEtapaStatusChange?.(false);
       }
     } catch (error) {
       console.error('Erro ao desfinalizar etapa:', error);
@@ -172,26 +176,14 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                   variant="outlined"
                   size="small"
                   onClick={() => setObsModalOpen(true)}
+                  disabled={disabled}
                 >
                   Observação
                 </Button>
                 {etapa.cobrarem && (
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => setCobrancasModalOpen(true)}
-                  >
-                    Histórico de Cobranças
-                  </Button>
+                  <Button variant="outlined" size="small" onClick={() => setCobrancasModalOpen(true)} disabled={disabled}>Histórico de Cobranças</Button>
                 )}
-                <Button
-                  variant="outlined"
-                  color="warning"
-                  size="small"
-                  onClick={handleDesfinalizar}
-                >
-                  Desfinalizar
-                </Button>
+                <Button variant="outlined" color="warning" size="small" onClick={() => setConfirmDesfinalizarOpen(true)} disabled={disabled}>Desfinalizar</Button>
               </Box>
             </Box>
 
@@ -274,6 +266,22 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
           dataCobranca={etapa.cobrarem}
           readonly={true}
         />
+
+        <ConfirmDialog
+          open={confirmDesfinalizarOpen}
+          onClose={() => {
+            console.log('ConfirmDialog fechando - Pre-Checklist (finalizada)');
+            setConfirmDesfinalizarOpen(false);
+          }}
+          onConfirm={() => {
+            console.log('ConfirmDialog confirmado - Pre-Checklist (finalizada)');
+            handleDesfinalizar();
+          }}
+          title="Desfinalizar Etapa"
+          message="Deseja realmente desfinalizar esta etapa? Ela voltará ao estado ativo."
+          confirmText="Desfinalizar"
+          confirmColor="warning"
+        />
       </>
     );
   }
@@ -291,6 +299,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                 variant="outlined"
                 size="small"
                 onClick={() => setObsModalOpen(true)}
+                disabled={disabled}
               >
                 Observação
               </Button>
@@ -299,6 +308,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                   variant="contained"
                   size="small"
                   onClick={() => setCobrancasModalOpen(true)}
+                  disabled={disabled}
                 >
                   Atualizar Cobranças
                 </Button>
@@ -308,6 +318,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                 color="success"
                 size="small"
                 onClick={() => setFinalizarModalOpen(true)}
+                disabled={disabled}
               >
                 Finalizar
               </Button>
@@ -322,7 +333,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                   Data do envio:
                 </Typography>
                 <Tooltip title="Ver histórico">
-                  <IconButton size="small" onClick={() => handleShowHistorico('dataenvio')}>
+                  <IconButton size="small" onClick={() => handleShowHistorico('dataenvio')} disabled={disabled}>
                     <History fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -334,6 +345,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                 value={etapa.dataenvio || ''}
                 onChange={(e) => handleDateChange('dataenvio', e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                disabled={disabled}
               />
             </Box>
 
@@ -344,7 +356,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                   Data do retorno:
                 </Typography>
                 <Tooltip title="Ver histórico">
-                  <IconButton size="small" onClick={() => handleShowHistorico('dataretorno')}>
+                  <IconButton size="small" onClick={() => handleShowHistorico('dataretorno')} disabled={disabled}>
                     <History fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -356,6 +368,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
                 value={etapa.dataretorno || ''}
                 onChange={(e) => handleDateChange('dataretorno', e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                disabled={disabled}
               />
             </Box>
 
@@ -409,6 +422,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
         checklistId={checklistId}
         nometapa="Pre-Checklist"
         dataCobranca={etapa.cobrarem}
+        readonly={disabled}
       />
 
       <FinalizarModal
@@ -418,11 +432,28 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
           setFinalizarModalOpen(false);
           fetchEtapa();
           onObservacaoAdded?.();
+          onEtapaStatusChange?.(true);
         }}
         checklistId={checklistId}
         nometapa="Pre-Checklist"
         dataInicio={etapa.dataenvio}
         previsaoInicial={etapa.dataretorno}
+      />
+
+      <ConfirmDialog
+        open={confirmDesfinalizarOpen}
+        onClose={() => {
+          console.log('ConfirmDialog fechando - Pre-Checklist');
+          setConfirmDesfinalizarOpen(false);
+        }}
+        onConfirm={() => {
+          console.log('ConfirmDialog confirmado - Pre-Checklist');
+          handleDesfinalizar();
+        }}
+        title="Desfinalizar Etapa"
+        message="Deseja realmente desfinalizar esta etapa? Ela voltará ao estado ativo."
+        confirmText="Desfinalizar"
+        confirmColor="warning"
       />
     </>
   );

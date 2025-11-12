@@ -14,7 +14,10 @@ export async function GET(request: NextRequest) {
       include: {
         tiposervico: true,
         checklist: {
-          select: { id: true },
+          select: { 
+            id: true,
+            status: true,
+          } as any, // Type assertion para campo recém adicionado
         },
         melhoria: {
           select: { id: true },
@@ -59,12 +62,31 @@ export async function POST(request: NextRequest) {
 
     // Criar checklist ou melhoria baseado no tipo
     if (servico.tiposervico.nometiposervico === 'Checklist') {
-      await prisma.checklist.create({
+      // Cria o checklist
+      const checklist = await prisma.checklist.create({
         data: {
           idservico: servico.id,
           criadopor: user?.nome || 'Sistema',
           atualizadopor: user?.nome || 'Sistema',
         },
+      });
+
+      // Cria etapas padrão (inclusive 'Pendências' para padronizar a visão), todas como não finalizadas
+      const REQUIRED_ETAPAS = [
+        'Pre-Checklist',
+        'Checklist',
+        'Validação de Desenvolvimento',
+        'Assinatura do Contrato',
+        'Pendências',
+      ];
+
+      await prisma.checklistEtapas.createMany({
+        data: REQUIRED_ETAPAS.map((nometapa) => ({
+          idchecklist: checklist.id,
+          nometapa,
+          criadopor: user?.nome || 'Sistema',
+          atualizadopor: user?.nome || 'Sistema',
+        })),
       });
     } else if (servico.tiposervico.nometiposervico === 'Melhoria') {
       await prisma.melhoria.create({

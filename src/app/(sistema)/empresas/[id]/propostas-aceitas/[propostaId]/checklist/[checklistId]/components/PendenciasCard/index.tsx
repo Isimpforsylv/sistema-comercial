@@ -10,17 +10,22 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
-import { History, NoteAdd } from '@mui/icons-material';
+import { History, NoteAdd, ExpandMore } from '@mui/icons-material';
 import ObservacaoModal from '../ObservacaoModal';
 import HistoricoModal from '../HistoricoModal';
 import CobrancasModal from '../CobrancasModal';
 import FinalizarModal from '../FinalizarModal';
+import ConfirmDialog from '@/app/components/ConfirmDialog';
 
 interface PendenciasCardProps {
   checklistId: string | string[];
   onObservacaoAdded?: () => void;
   onEtapaStatusChange?: (finalizada: boolean) => void;
+  disabled?: boolean;
 }
 
 interface EtapaData {
@@ -34,7 +39,7 @@ interface EtapaData {
   datafim?: string;
 }
 
-export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapaStatusChange }: PendenciasCardProps) {
+export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapaStatusChange, disabled = false }: PendenciasCardProps) {
   const [etapa, setEtapa] = useState<EtapaData>({
     dataenvio: '',
     dataretorno: '',
@@ -48,6 +53,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
   const [historicoModalOpen, setHistoricoModalOpen] = useState(false);
   const [cobrancasModalOpen, setCobrancasModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
+  const [confirmDesfinalizarOpen, setConfirmDesfinalizarOpen] = useState(false);
   const [historicoTipo, setHistoricoTipo] = useState<'dataenvio' | 'dataretorno'>('dataenvio');
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -112,7 +118,91 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
     setHistoricoModalOpen(true);
   };
 
+  const handleDesfinalizar = async () => {
+    try {
+      const response = await fetch(`/api/checklist/${checklistId}/etapas/Pendências/finalizar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ desfinalizar: true }),
+      });
+
+      if (response.ok) {
+        await fetchEtapa();
+        onEtapaStatusChange?.(false);
+        // NÃO chama onObservacaoAdded para manter modal de gerenciar pendências aberto
+      }
+    } catch (error) {
+      console.error('Erro ao desfinalizar etapa:', error);
+    }
+  };
+
   if (loading || !mounted) return <Typography>Carregando...</Typography>;
+
+  if (etapa.finalizada) {
+    return (
+      <>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
+              <Typography variant="h6">Pendências - Finalizada</Typography>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Typography variant="body2">
+                  <strong>Data início:</strong> {etapa.dataenvio ? new Date(etapa.dataenvio).toLocaleDateString('pt-BR') : '-'}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Data fim:</strong> {etapa.datafim ? new Date(etapa.datafim).toLocaleDateString('pt-BR') : '-'}
+                  {etapa.dataretorno && (
+                    <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                      (Previsão inicial: {new Date(etapa.dataretorno).toLocaleDateString('pt-BR')})
+                    </Typography>
+                  )}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold">Detalhes da Etapa</Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button startIcon={<NoteAdd />} variant="outlined" size="small" onClick={() => setObsModalOpen(true)} disabled={disabled}>Observação</Button>
+                {etapa.cobrarem && (
+                  <Button variant="outlined" size="small" onClick={() => setCobrancasModalOpen(true)} disabled={disabled}>Histórico de Cobranças</Button>
+                )}
+                <Button variant="outlined" color="warning" size="small" onClick={() => setConfirmDesfinalizarOpen(true)} disabled={disabled}>Desfinalizar</Button>
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 3 }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>Data do envio:</Typography>
+                <TextField type="date" fullWidth size="small" value={etapa.dataenvio || ''} InputLabelProps={{ shrink: true }} disabled />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>Data do retorno:</Typography>
+                <TextField type="date" fullWidth size="small" value={etapa.dataretorno || ''} InputLabelProps={{ shrink: true }} disabled />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>Cobrar em:</Typography>
+                <TextField type="date" fullWidth size="small" value={etapa.cobrarem || ''} InputLabelProps={{ shrink: true }} disabled />
+              </Box>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+
+        <ObservacaoModal open={obsModalOpen} onClose={() => setObsModalOpen(false)} onSuccess={() => { setObsModalOpen(false); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Pendências" />
+        <HistoricoModal open={historicoModalOpen} onClose={() => setHistoricoModalOpen(false)} historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno} titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'} />
+        <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Pendências" dataCobranca={etapa.cobrarem} readonly={true} />
+        <ConfirmDialog
+          open={confirmDesfinalizarOpen}
+          onClose={() => setConfirmDesfinalizarOpen(false)}
+          onConfirm={handleDesfinalizar}
+          title="Desfinalizar Etapa"
+          message="Deseja realmente desfinalizar esta etapa? Ela voltará ao estado ativo."
+          confirmText="Desfinalizar"
+          confirmColor="warning"
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -134,6 +224,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
                   variant="contained"
                   size="small"
                   onClick={() => setCobrancasModalOpen(true)}
+                  disabled={disabled}
                 >
                   Atualizar Cobranças
                 </Button>
@@ -143,6 +234,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
                 color="success"
                 size="small"
                 onClick={() => setFinalizarModalOpen(true)}
+                disabled={disabled}
               >
                 Finalizar
               </Button>
@@ -157,7 +249,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
                   Data do envio:
                 </Typography>
                 <Tooltip title="Ver histórico">
-                  <IconButton size="small" onClick={() => handleShowHistorico('dataenvio')}>
+                  <IconButton size="small" onClick={() => handleShowHistorico('dataenvio')} disabled={disabled}>
                     <History fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -169,6 +261,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
                 value={etapa.dataenvio || ''}
                 onChange={(e) => handleDateChange('dataenvio', e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                disabled={disabled}
               />
             </Box>
 
@@ -179,7 +272,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
                   Data do retorno:
                 </Typography>
                 <Tooltip title="Ver histórico">
-                  <IconButton size="small" onClick={() => handleShowHistorico('dataretorno')}>
+                  <IconButton size="small" onClick={() => handleShowHistorico('dataretorno')} disabled={disabled}>
                     <History fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -191,6 +284,7 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
                 value={etapa.dataretorno || ''}
                 onChange={(e) => handleDateChange('dataretorno', e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                disabled={disabled}
               />
             </Box>
 
@@ -252,7 +346,8 @@ export default function PendenciasCard({ checklistId, onObservacaoAdded, onEtapa
         onSuccess={() => {
           setFinalizarModalOpen(false);
           fetchEtapa();
-          onObservacaoAdded?.();
+          onEtapaStatusChange?.(true);
+          // NÃO chama onObservacaoAdded para manter modal de gerenciar pendências aberto
         }}
         checklistId={checklistId}
         nometapa="Pendências"

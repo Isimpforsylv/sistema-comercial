@@ -19,11 +19,13 @@ import ObservacaoModal from '../ObservacaoModal';
 import HistoricoModal from '../HistoricoModal';
 import CobrancasModal from '../CobrancasModal';
 import FinalizarModal from '../FinalizarModal';
+import ConfirmDialog from '@/app/components/ConfirmDialog';
 
 interface ChecklistCardProps {
   checklistId: string | string[];
   onObservacaoAdded?: () => void;
   onEtapaStatusChange?: (finalizada: boolean) => void;
+  disabled?: boolean;
 }
 
 interface EtapaData {
@@ -37,7 +39,7 @@ interface EtapaData {
   datafim?: string;
 }
 
-export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaStatusChange }: ChecklistCardProps) {
+export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaStatusChange, disabled = false }: ChecklistCardProps) {
   const [etapa, setEtapa] = useState<EtapaData>({
     dataenvio: '',
     dataretorno: '',
@@ -51,6 +53,7 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
   const [historicoModalOpen, setHistoricoModalOpen] = useState(false);
   const [cobrancasModalOpen, setCobrancasModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
+  const [confirmDesfinalizarOpen, setConfirmDesfinalizarOpen] = useState(false);
   const [historicoTipo, setHistoricoTipo] = useState<'dataenvio' | 'dataretorno'>('dataenvio');
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -117,8 +120,7 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
   };
 
   const handleDesfinalizar = async () => {
-    if (!confirm('Deseja realmente desfinalizar esta etapa?')) return;
-    
+    console.log('handleDesfinalizar chamado');
     try {
       const response = await fetch(`/api/checklist/${checklistId}/etapas/Checklist/finalizar`, {
         method: 'PUT',
@@ -126,9 +128,11 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
         body: JSON.stringify({ desfinalizar: true }),
       });
 
+      console.log('Response status:', response.status);
       if (response.ok) {
-        fetchEtapa();
+        await fetchEtapa();
         onObservacaoAdded?.();
+        onEtapaStatusChange?.(false);
       }
     } catch (error) {
       console.error('Erro ao desfinalizar etapa:', error);
@@ -163,11 +167,14 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold">Detalhes da Etapa</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button startIcon={<NoteAdd />} variant="outlined" size="small" onClick={() => setObsModalOpen(true)}>Observação</Button>
+                <Button startIcon={<NoteAdd />} variant="outlined" size="small" onClick={() => setObsModalOpen(true)} disabled={disabled}>Observação</Button>
                 {etapa.cobrarem && (
-                  <Button variant="outlined" size="small" onClick={() => setCobrancasModalOpen(true)}>Histórico de Cobranças</Button>
+                  <Button variant="outlined" size="small" onClick={() => setCobrancasModalOpen(true)} disabled={disabled}>Histórico de Cobranças</Button>
                 )}
-                <Button variant="outlined" color="warning" size="small" onClick={handleDesfinalizar}>Desfinalizar</Button>
+                <Button variant="outlined" color="warning" size="small" disabled={disabled} onClick={() => {
+                  console.log('Botão Desfinalizar clicado');
+                  setConfirmDesfinalizarOpen(true);
+                }}>Desfinalizar</Button>
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 3 }}>
@@ -190,6 +197,21 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
         <ObservacaoModal open={obsModalOpen} onClose={() => setObsModalOpen(false)} onSuccess={() => { setObsModalOpen(false); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" />
         <HistoricoModal open={historicoModalOpen} onClose={() => setHistoricoModalOpen(false)} historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno} titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'} />
         <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" dataCobranca={etapa.cobrarem} readonly={true} />
+        <ConfirmDialog
+          open={confirmDesfinalizarOpen}
+          onClose={() => {
+            console.log('ConfirmDialog fechando');
+            setConfirmDesfinalizarOpen(false);
+          }}
+          onConfirm={() => {
+            console.log('ConfirmDialog confirmado');
+            handleDesfinalizar();
+          }}
+          title="Desfinalizar Etapa"
+          message="Deseja realmente desfinalizar esta etapa? Ela voltará ao estado ativo."
+          confirmText="Desfinalizar"
+          confirmColor="warning"
+        />
       </>
     );
   }
@@ -201,11 +223,11 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6">Checklist</Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button startIcon={<NoteAdd />} variant="outlined" size="small" onClick={() => setObsModalOpen(true)}>Observação</Button>
+              <Button startIcon={<NoteAdd />} variant="outlined" size="small" onClick={() => setObsModalOpen(true)} disabled={disabled}>Observação</Button>
               {etapa.cobrarem && (
-                <Button variant="contained" size="small" onClick={() => setCobrancasModalOpen(true)}>Atualizar Cobranças</Button>
+                <Button variant="contained" size="small" onClick={() => setCobrancasModalOpen(true)} disabled={disabled}>Atualizar Cobranças</Button>
               )}
-              <Button variant="contained" color="success" size="small" onClick={() => setFinalizarModalOpen(true)}>Finalizar</Button>
+              <Button variant="contained" color="success" size="small" onClick={() => setFinalizarModalOpen(true)} disabled={disabled}>Finalizar</Button>
             </Box>
           </Box>
 
@@ -213,16 +235,16 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, minHeight: '32px' }}>
                 <Typography variant="body2" fontWeight="bold">Data do envio:</Typography>
-                <Tooltip title="Ver histórico"><IconButton size="small" onClick={() => handleShowHistorico('dataenvio')}><History fontSize="small" /></IconButton></Tooltip>
+                <Tooltip title="Ver histórico"><IconButton size="small" onClick={() => handleShowHistorico('dataenvio')} disabled={disabled}><History fontSize="small" /></IconButton></Tooltip>
               </Box>
-              <TextField type="date" fullWidth size="small" value={etapa.dataenvio || ''} onChange={(e) => handleDateChange('dataenvio', e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField type="date" fullWidth size="small" value={etapa.dataenvio || ''} onChange={(e) => handleDateChange('dataenvio', e.target.value)} InputLabelProps={{ shrink: true }} disabled={disabled} />
             </Box>
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, minHeight: '32px' }}>
                 <Typography variant="body2" fontWeight="bold">Data do retorno:</Typography>
-                <Tooltip title="Ver histórico"><IconButton size="small" onClick={() => handleShowHistorico('dataretorno')}><History fontSize="small" /></IconButton></Tooltip>
+                <Tooltip title="Ver histórico"><IconButton size="small" onClick={() => handleShowHistorico('dataretorno')} disabled={disabled}><History fontSize="small" /></IconButton></Tooltip>
               </Box>
-              <TextField type="date" fullWidth size="small" value={etapa.dataretorno || ''} onChange={(e) => handleDateChange('dataretorno', e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField type="date" fullWidth size="small" value={etapa.dataretorno || ''} onChange={(e) => handleDateChange('dataretorno', e.target.value)} InputLabelProps={{ shrink: true }} disabled={disabled} />
             </Box>
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, minHeight: '32px' }}>
@@ -236,8 +258,8 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
 
       <ObservacaoModal open={obsModalOpen} onClose={() => setObsModalOpen(false)} onSuccess={() => { setObsModalOpen(false); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" />
       <HistoricoModal open={historicoModalOpen} onClose={() => setHistoricoModalOpen(false)} historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno} titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'} />
-      <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" dataCobranca={etapa.cobrarem} />
-      <FinalizarModal open={finalizarModalOpen} onClose={() => setFinalizarModalOpen(false)} onSuccess={() => { setFinalizarModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" dataInicio={etapa.dataenvio} previsaoInicial={etapa.dataretorno} />
+      <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" dataCobranca={etapa.cobrarem} readonly={disabled} />
+      <FinalizarModal open={finalizarModalOpen} onClose={() => setFinalizarModalOpen(false)} onSuccess={() => { setFinalizarModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); onEtapaStatusChange?.(true); }} checklistId={checklistId} nometapa="Checklist" dataInicio={etapa.dataenvio} previsaoInicial={etapa.dataretorno} />
     </>
   );
 }

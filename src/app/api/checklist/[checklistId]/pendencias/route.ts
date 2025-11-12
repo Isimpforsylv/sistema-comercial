@@ -5,11 +5,18 @@ import { getCurrentUser } from '@/lib/auth';
 // GET - Listar todas as pendências de um checklist
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ checklistId: string }> }
+  context: { params?: { checklistId?: string } }
 ) {
   try {
-    const params = await context.params;
-    const checklistId = Number(params.checklistId);
+    let checklistId = context?.params?.checklistId ? Number(context.params.checklistId) : NaN;
+    if (!checklistId) {
+      const url = new URL(request.url);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idxChecklist = parts.indexOf('checklist');
+      if (!checklistId && idxChecklist >= 0 && parts[idxChecklist + 1]) {
+        checklistId = Number(parts[idxChecklist + 1]);
+      }
+    }
 
     if (!checklistId) {
       return NextResponse.json({ error: 'ID do checklist inválido' }, { status: 400 });
@@ -30,12 +37,20 @@ export async function GET(
 // POST - Criar nova pendência
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ checklistId: string }> }
+  context: { params?: { checklistId?: string } }
 ) {
   try {
     const user = await getCurrentUser();
-    const params = await context.params;
-    const checklistId = Number(params.checklistId);
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    let checklistId = context?.params?.checklistId ? Number(context.params.checklistId) : NaN;
+    if (!checklistId) {
+      const url = new URL(request.url);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idxChecklist = parts.indexOf('checklist');
+      if (!checklistId && idxChecklist >= 0 && parts[idxChecklist + 1]) {
+        checklistId = Number(parts[idxChecklist + 1]);
+      }
+    }
     const body = await request.json();
 
     if (!checklistId) {

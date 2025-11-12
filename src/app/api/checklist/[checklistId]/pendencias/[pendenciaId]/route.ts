@@ -5,12 +5,20 @@ import { getCurrentUser } from '@/lib/auth';
 // PUT - Atualizar pendência
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ checklistId: string; pendenciaId: string }> }
+  context: { params?: { checklistId?: string; pendenciaId?: string } }
 ) {
   try {
     const user = await getCurrentUser();
-    const params = await context.params;
-    const pendenciaId = Number(params.pendenciaId);
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    let pendenciaId = context?.params?.pendenciaId ? Number(context.params.pendenciaId) : NaN;
+    if (!pendenciaId) {
+      const url = new URL(request.url);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idxPendencias = parts.indexOf('pendencias');
+      if (idxPendencias >= 0 && parts[idxPendencias + 1]) {
+        pendenciaId = Number(parts[idxPendencias + 1]);
+      }
+    }
     const body = await request.json();
 
     if (!pendenciaId) {
@@ -50,11 +58,20 @@ export async function PUT(
 // DELETE - Remover pendência
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ checklistId: string; pendenciaId: string }> }
+  context: { params?: { checklistId?: string; pendenciaId?: string } }
 ) {
   try {
-    const params = await context.params;
-    const pendenciaId = Number(params.pendenciaId);
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    let pendenciaId = context?.params?.pendenciaId ? Number(context.params.pendenciaId) : NaN;
+    if (!pendenciaId) {
+      const url = new URL(request.url);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idxPendencias = parts.indexOf('pendencias');
+      if (idxPendencias >= 0 && parts[idxPendencias + 1]) {
+        pendenciaId = Number(parts[idxPendencias + 1]);
+      }
+    }
 
     if (!pendenciaId) {
       return NextResponse.json({ error: 'ID da pendência inválido' }, { status: 400 });

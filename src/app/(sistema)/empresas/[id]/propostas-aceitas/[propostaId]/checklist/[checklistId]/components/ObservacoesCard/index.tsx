@@ -23,6 +23,7 @@ import PendenciasModal from '../PendenciasModal';
 interface ObservacoesCardProps {
   checklistId: string | string[];
   etapasFinalizadas?: string[]; // Array de nomes das etapas finalizadas
+  disabled?: boolean; // Bloqueia gerenciamento de pendências
 }
 
 export interface ObservacoesCardHandle {
@@ -50,7 +51,7 @@ interface Pendencia {
   criadoem: string;
 }
 
-const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(({ checklistId, etapasFinalizadas = [] }, ref) => {
+const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(({ checklistId, etapasFinalizadas = [], disabled = false }, ref) => {
   const [observacoes, setObservacoes] = useState<ObservacoesPorEtapa>({});
   const [pendencias, setPendencias] = useState<Pendencia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -193,6 +194,7 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
                   variant="contained"
                   startIcon={<Settings />}
                   onClick={() => setPendenciasModalOpen(true)}
+                  disabled={disabled}
                 >
                   Gerenciar Pendências
                 </Button>
@@ -287,6 +289,7 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
         fetchPendencias();
       }}
       checklistId={checklistId}
+      readonly={disabled}
     />
     </>
   );

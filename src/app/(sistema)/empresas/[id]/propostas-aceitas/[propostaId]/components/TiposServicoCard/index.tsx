@@ -36,9 +36,20 @@ interface Servico {
     id: number;
     nometiposervico: string;
   };
-  checklist?: { id: number } | null;
+  checklist?: { 
+    id: number;
+    status?: string;
+  } | null;
   melhoria?: { id: number } | null;
 }
+
+const STATUS_CONFIG = {
+  em_andamento: { label: 'Em Andamento', color: '#FFA726' }, // Amarelo
+  finalizado: { label: 'Finalizado', color: '#66BB6A' }, // Verde
+  pausado: { label: 'Pausado', color: '#FF7043' }, // Laranja
+  cancelado: { label: 'Cancelado', color: '#EF5350' }, // Vermelho
+  desistiu: { label: 'Desistiu', color: '#9E9E9E' }, // Cinza
+};
 
 export default function TiposServicoCard({ empresaId, propostaId }: TiposServicoCardProps) {
   const [servicos, setServicos] = useState<Servico[]>([]);
@@ -216,13 +227,24 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
                 >
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         <Typography variant="body1">{servico.nomedescricao}</Typography>
                         <Chip
                           label={servico.tiposervico.nometiposervico}
                           size="small"
                           color={servico.tiposervico.nometiposervico === 'Checklist' ? 'primary' : 'secondary'}
                         />
+                        {servico.checklist?.status && (
+                          <Chip
+                            label={STATUS_CONFIG[servico.checklist.status as keyof typeof STATUS_CONFIG]?.label || servico.checklist.status}
+                            size="small"
+                            sx={{
+                              bgcolor: STATUS_CONFIG[servico.checklist.status as keyof typeof STATUS_CONFIG]?.color || '#9E9E9E',
+                              color: 'white',
+                              fontWeight: 'bold',
+                            }}
+                          />
+                        )}
                       </Box>
                     }
                     secondary={

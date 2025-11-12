@@ -31,6 +31,7 @@ interface PendenciasModalProps {
   onClose: () => void;
   onSuccess: () => void;
   checklistId: string | string[];
+  readonly?: boolean;
 }
 
 interface Pendencia {
@@ -43,7 +44,7 @@ interface Pendencia {
   criadoem: string;
 }
 
-export default function PendenciasModal({ open, onClose, onSuccess, checklistId }: PendenciasModalProps) {
+export default function PendenciasModal({ open, onClose, onSuccess, checklistId, readonly = false }: PendenciasModalProps) {
   const [pendencias, setPendencias] = useState<Pendencia[]>([]);
   const [descricao, setDescricao] = useState('');
   const [impeditiva, setImpeditiva] = useState<boolean>(false);
@@ -71,6 +72,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
 
   const handleAdicionarPendencia = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (readonly) return;
     if (!descricao.trim()) return;
 
     setLoading(true);
@@ -95,6 +97,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
   };
 
   const handleToggleFinalizada = async (pendenciaId: number, finalizada: boolean) => {
+    if (readonly) return;
     try {
       const response = await fetch(`/api/checklist/${checklistId}/pendencias/${pendenciaId}`, {
         method: 'PUT',
@@ -112,6 +115,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
   };
 
   const handleEditarPendencia = async (pendenciaId: number) => {
+    if (readonly) return;
     if (!descricaoEdit.trim()) return;
 
     try {
@@ -133,6 +137,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
   };
 
   const handleDeletarPendencia = async (pendenciaId: number) => {
+    if (readonly) return;
     if (!confirm('Deseja realmente remover esta pendência?')) return;
 
     try {
@@ -180,6 +185,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
           <PendenciasCard 
             checklistId={checklistId}
             onObservacaoAdded={onSuccess}
+            disabled={readonly}
           />
         </Box>
 
@@ -200,7 +206,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || readonly}
               />
               <FormControl sx={{ minWidth: 200 }}>
                 <InputLabel>Tipo</InputLabel>
@@ -208,7 +214,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                   value={impeditiva}
                   label="Tipo"
                   onChange={(e) => setImpeditiva(e.target.value as boolean)}
-                  disabled={loading}
+                  disabled={loading || readonly}
                 >
                   <MenuItem value={false as any}>Não Impeditiva</MenuItem>
                   <MenuItem value={true as any}>Impeditiva</MenuItem>
@@ -218,7 +224,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                 type="submit"
                 variant="contained"
                 startIcon={<Add />}
-                disabled={loading || !descricao.trim()}
+                disabled={readonly || loading || !descricao.trim()}
                 sx={{ minWidth: 120, height: 56 }}
               >
                 Adicionar
@@ -249,6 +255,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                           edge="start"
                           checked={pendencia.finalizada}
                           onChange={() => handleToggleFinalizada(pendencia.id, pendencia.finalizada)}
+                          disabled={readonly}
                         />
                         {editando === pendencia.id ? (
                           <Box sx={{ flex: 1, display: 'flex', gap: 1 }}>
@@ -258,11 +265,12 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                               value={descricaoEdit}
                               onChange={(e) => setDescricaoEdit(e.target.value)}
                               multiline
+                              disabled={readonly}
                             />
-                            <Button size="small" onClick={() => handleEditarPendencia(pendencia.id)}>
+                            <Button size="small" onClick={() => handleEditarPendencia(pendencia.id)} disabled={readonly}>
                               Salvar
                             </Button>
-                            <Button size="small" onClick={() => setEditando(null)}>
+                            <Button size="small" onClick={() => setEditando(null)} disabled={readonly}>
                               Cancelar
                             </Button>
                           </Box>
@@ -290,10 +298,10 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                         <ListItemSecondaryAction>
                           {!pendencia.finalizada && (
                             <>
-                              <IconButton edge="end" size="small" onClick={() => handleStartEdit(pendencia)}>
+                              <IconButton edge="end" size="small" onClick={() => handleStartEdit(pendencia)} disabled={readonly}>
                                 <Edit fontSize="small" />
                               </IconButton>
-                              <IconButton edge="end" size="small" onClick={() => handleDeletarPendencia(pendencia.id)}>
+                              <IconButton edge="end" size="small" onClick={() => handleDeletarPendencia(pendencia.id)} disabled={readonly}>
                                 <Delete fontSize="small" />
                               </IconButton>
                             </>
@@ -327,6 +335,7 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                           edge="start"
                           checked={pendencia.finalizada}
                           onChange={() => handleToggleFinalizada(pendencia.id, pendencia.finalizada)}
+                          disabled={readonly}
                         />
                         {editando === pendencia.id ? (
                           <Box sx={{ flex: 1, display: 'flex', gap: 1 }}>
@@ -336,11 +345,12 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                               value={descricaoEdit}
                               onChange={(e) => setDescricaoEdit(e.target.value)}
                               multiline
+                              disabled={readonly}
                             />
-                            <Button size="small" onClick={() => handleEditarPendencia(pendencia.id)}>
+                            <Button size="small" onClick={() => handleEditarPendencia(pendencia.id)} disabled={readonly}>
                               Salvar
                             </Button>
-                            <Button size="small" onClick={() => setEditando(null)}>
+                            <Button size="small" onClick={() => setEditando(null)} disabled={readonly}>
                               Cancelar
                             </Button>
                           </Box>
@@ -368,10 +378,10 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId 
                         <ListItemSecondaryAction>
                           {!pendencia.finalizada && (
                             <>
-                              <IconButton edge="end" size="small" onClick={() => handleStartEdit(pendencia)}>
+                              <IconButton edge="end" size="small" onClick={() => handleStartEdit(pendencia)} disabled={readonly}>
                                 <Edit fontSize="small" />
                               </IconButton>
-                              <IconButton edge="end" size="small" onClick={() => handleDeletarPendencia(pendencia.id)}>
+                              <IconButton edge="end" size="small" onClick={() => handleDeletarPendencia(pendencia.id)} disabled={readonly}>
                                 <Delete fontSize="small" />
                               </IconButton>
                             </>

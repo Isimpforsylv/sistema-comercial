@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  context: { params?: { checklistId?: string; nometapa?: string } }
+) {
   try {
-    const urlParts = request.url.split('/');
-    const nometapa = decodeURIComponent(urlParts[urlParts.length - 1]);
-    const checklistId = Number(urlParts[urlParts.length - 3]);
+    let nometapa = context?.params?.nometapa ? decodeURIComponent(context.params.nometapa) : undefined as unknown as string;
+    let checklistId = context?.params?.checklistId ? Number(context.params.checklistId) : NaN;
+    if (!nometapa || !checklistId) {
+      const url = new URL(request.url);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idxChecklist = parts.indexOf('checklist');
+      const idxCobrancas = parts.indexOf('cobrancas');
+      if (!checklistId && idxChecklist >= 0 && parts[idxChecklist + 1]) {
+        checklistId = Number(parts[idxChecklist + 1]);
+      }
+      if (!nometapa && idxCobrancas >= 0 && parts[idxCobrancas + 1]) {
+        nometapa = decodeURIComponent(parts[idxCobrancas + 1]);
+      }
+    }
 
     if (!checklistId || !nometapa) {
       return NextResponse.json({ error: 'Parâmetros inválidos' }, { status: 400 });
@@ -27,12 +41,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  context: { params?: { checklistId?: string; nometapa?: string } }
+) {
   try {
     const user = await getCurrentUser();
-    const urlParts = request.url.split('/');
-    const nometapa = decodeURIComponent(urlParts[urlParts.length - 1]);
-    const checklistId = Number(urlParts[urlParts.length - 3]);
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    let nometapa = context?.params?.nometapa ? decodeURIComponent(context.params.nometapa) : undefined as unknown as string;
+    let checklistId = context?.params?.checklistId ? Number(context.params.checklistId) : NaN;
+    if (!nometapa || !checklistId) {
+      const url = new URL(request.url);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idxChecklist = parts.indexOf('checklist');
+      const idxCobrancas = parts.indexOf('cobrancas');
+      if (!checklistId && idxChecklist >= 0 && parts[idxChecklist + 1]) {
+        checklistId = Number(parts[idxChecklist + 1]);
+      }
+      if (!nometapa && idxCobrancas >= 0 && parts[idxCobrancas + 1]) {
+        nometapa = decodeURIComponent(parts[idxCobrancas + 1]);
+      }
+    }
     const body = await request.json();
 
     if (!checklistId || !nometapa) {
