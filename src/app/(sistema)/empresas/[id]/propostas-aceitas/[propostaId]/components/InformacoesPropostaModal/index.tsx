@@ -51,23 +51,26 @@ export default function InformacoesPropostaModal({
   });
   const [loading, setLoading] = useState(false);
 
+  // Reset form data whenever modal opens
   useEffect(() => {
-    if (informacoes) {
-      setFormData({
-        empresa: informacoes.empresa || '',
-        pais: informacoes.pais || 'Brasil',
-        estado: informacoes.estado || '',
-        cidade: informacoes.cidade || '',
-        endereco: informacoes.endereco || '',
-        contato: informacoes.contato || '',
-        email: informacoes.email || '',
-        telefone: informacoes.telefone || '',
-        linkwiki: informacoes.linkwiki || '',
-        caminhopasta: informacoes.caminhopasta || '\\\\serverideia2\\Comercial',
-        dataaceite: informacoes.dataaceite ? new Date(informacoes.dataaceite).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      });
+    if (open) {
+      if (informacoes) {
+        setFormData({
+          empresa: informacoes.empresa || '',
+          pais: informacoes.pais || 'Brasil',
+          estado: informacoes.estado || '',
+          cidade: informacoes.cidade || '',
+          endereco: informacoes.endereco || '',
+          contato: informacoes.contato || '',
+          email: informacoes.email || '',
+          telefone: informacoes.telefone || '',
+          linkwiki: informacoes.linkwiki || '',
+          caminhopasta: informacoes.caminhopasta || '\\\\serverideia2\\Comercial',
+          dataaceite: informacoes.dataaceite ? new Date(informacoes.dataaceite).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        });
+      }
     }
-  }, [informacoes]);
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

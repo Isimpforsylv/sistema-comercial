@@ -98,7 +98,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(servico, { status: 201 });
+    // Busca o serviço criado com todos os relacionamentos
+    const servicoCompleto = await prisma.servicosPropostasAceitas.findUnique({
+      where: { id: servico.id },
+      include: {
+        tiposervico: true,
+        checklist: {
+          select: { 
+            id: true,
+            status: true,
+          } as any,
+        },
+        melhoria: {
+          select: { id: true },
+        },
+      },
+    });
+
+    return NextResponse.json(servicoCompleto, { status: 201 });
   } catch (error) {
     console.error('Erro ao criar serviço:', error);
     return NextResponse.json({ error: 'Erro ao criar serviço' }, { status: 500 });

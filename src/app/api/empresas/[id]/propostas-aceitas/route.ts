@@ -25,7 +25,7 @@ export async function POST(
     const urlParts = request.url.split('/');
     const idempresa = Number(urlParts[urlParts.length - 2]);
     const body = await request.json();
-    const { nomeproposta } = body;
+    const { nomeproposta, codproposta } = body;
     if (!idempresa || !nomeproposta) {
       return NextResponse.json({ error: 'Dados obrigatórios faltando' }, { status: 400 });
     }
@@ -33,6 +33,7 @@ export async function POST(
       data: {
         idempresa,
         nomeproposta,
+        codproposta: codproposta || null,
       },
     });
     return NextResponse.json(proposta, { status: 201 });

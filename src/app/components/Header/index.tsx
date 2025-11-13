@@ -51,7 +51,7 @@ export default function Header({ showLogout = true }: HeaderProps) {
   const isHomePage = pathname === '/empresas';
 
   return (
-    <AppBar position="sticky" color="default" elevation={1}>
+    <AppBar position="sticky" color="default" elevation={0} sx={{ borderRadius: 0, borderBottom: '1px solid', borderColor: 'divider' }}>
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {!isLoginPage && !isHomePage && (

@@ -55,6 +55,12 @@ export default function PendenciasModal({ open, onClose, onSuccess, checklistId,
   useEffect(() => {
     if (open) {
       fetchPendencias();
+    } else {
+      // Reset form when modal closes
+      setDescricao('');
+      setImpeditiva(false);
+      setEditando(null);
+      setDescricaoEdit('');
     }
   }, [open, checklistId]);
 

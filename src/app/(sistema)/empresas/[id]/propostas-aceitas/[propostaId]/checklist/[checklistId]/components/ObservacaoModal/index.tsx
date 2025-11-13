@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -27,6 +27,13 @@ export default function ObservacaoModal({
 }: ObservacaoModalProps) {
   const [observacao, setObservacao] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      setObservacao('');
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

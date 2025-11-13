@@ -48,6 +48,7 @@ model PropostasAceitas {
   id           Int                          @id @default(autoincrement())
   idempresa    Int
   nomeproposta String                       @db.VarChar(255)
+  codproposta  String?                      @db.VarChar(100)
   criadoem     DateTime                     @default(now())
   atualizadoem DateTime                     @updatedAt
   informacoes  InformacoesPropostasAceitas?

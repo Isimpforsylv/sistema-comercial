@@ -38,6 +38,15 @@ export default function EmpresaModal({ open, onClose, onSuccess }: EmpresaModalP
   useEffect(() => {
     if (open) {
       fetchGrupos();
+    } else {
+      // Reset form when modal closes
+      setFormData({
+        nomeempresa: '',
+        codigoempresa: '',
+        idgrupo: '',
+        cliente: false,
+        criadopor: 'Admin',
+      });
     }
   }, [open]);
 

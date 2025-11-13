@@ -177,7 +177,7 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
       <Card>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Tipos de Serviço</Typography>
+            <Typography variant="h6">Lista de Serviços</Typography>
             <Button startIcon={<Add />} onClick={() => setModalOpen(true)} variant="contained" size="small">
               Adicionar Serviço
             </Button>
