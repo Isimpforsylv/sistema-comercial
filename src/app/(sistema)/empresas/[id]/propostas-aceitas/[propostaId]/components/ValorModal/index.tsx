@@ -293,7 +293,11 @@ export default function ValorModal({
                   <FormControl fullWidth>
                     <InputLabel>Nome do Recurso</InputLabel>
                     <Select
-                      value={recurso.nomerecurso}
+                      value={
+                        listaRecursos.some(lr => lr.nomerecurso === recurso.nomerecurso) 
+                          ? recurso.nomerecurso 
+                          : 'Outro'
+                      }
                       label="Nome do Recurso"
                       onChange={(e) => handleRecursoChange(recurso.id, 'nomerecurso', e.target.value)}
                       disabled={loading}
@@ -306,12 +310,22 @@ export default function ValorModal({
                     </Select>
                   </FormControl>
 
-                  {recurso.nomerecurso === 'Outro' && (
+                  {(recurso.nomerecurso === 'Outro' || !listaRecursos.some(lr => lr.nomerecurso === recurso.nomerecurso)) && (
                     <TextField
                       label="Especifique o recurso"
                       fullWidth
-                      value={recurso.outrorecurso || ''}
-                      onChange={(e) => handleRecursoChange(recurso.id, 'outrorecurso', e.target.value)}
+                      value={
+                        listaRecursos.some(lr => lr.nomerecurso === recurso.nomerecurso)
+                          ? recurso.outrorecurso || ''
+                          : recurso.nomerecurso
+                      }
+                      onChange={(e) => {
+                        if (recurso.nomerecurso === 'Outro') {
+                          handleRecursoChange(recurso.id, 'outrorecurso', e.target.value);
+                        } else {
+                          handleRecursoChange(recurso.id, 'nomerecurso', e.target.value);
+                        }
+                      }}
                       disabled={loading}
                     />
                   )}

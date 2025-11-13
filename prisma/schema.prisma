@@ -45,16 +45,19 @@ model Empresas {
 }
 
 model PropostasAceitas {
-  id           Int                          @id @default(autoincrement())
-  idempresa    Int
-  nomeproposta String                       @db.VarChar(255)
-  codproposta  String?                      @db.VarChar(100)
-  criadoem     DateTime                     @default(now())
-  atualizadoem DateTime                     @updatedAt
-  informacoes  InformacoesPropostasAceitas?
-  empresa      Empresas                     @relation(fields: [idempresa], references: [id])
-  servicos     ServicosPropostasAceitas[]
-  valores      ValoresPropostasAceitas[]
+  id                   Int                          @id @default(autoincrement())
+  idempresa            Int
+  nomeproposta         String                       @db.VarChar(255)
+  codproposta          String?                      @db.VarChar(100)
+  dataenvioproj        DateTime?
+  dataenviofinanceiro  DateTime?
+  finalizado           Boolean                      @default(false)
+  criadoem             DateTime                     @default(now())
+  atualizadoem         DateTime                     @updatedAt
+  informacoes          InformacoesPropostasAceitas?
+  empresa              Empresas                     @relation(fields: [idempresa], references: [id])
+  servicos             ServicosPropostasAceitas[]
+  valores              ValoresPropostasAceitas[]
 
   @@index([idempresa], map: "propostas_aceitas_idempresa_fkey")
   @@map("propostas_aceitas")
@@ -93,6 +96,9 @@ model ValoresPropostasAceitas {
   alteracaomensalidade String                            @db.VarChar(255)
   prazo                String                            @db.VarChar(255)
   observacao           String                            @db.Text
+  valorfinal           String?                           @db.VarChar(100)
+  prazofinal           String?                           @db.VarChar(255)
+  formafinal           String?                           @db.VarChar(255)
   criadopor            String                            @default("Sistema") @db.VarChar(255)
   atualizadopor        String                            @default("Sistema") @db.VarChar(255)
   criadoem             DateTime                          @default(now())
@@ -118,6 +124,9 @@ model RecursosValoresPropostasAceitas {
   valor          String                  @db.VarChar(100)
   formapagamento String                  @db.VarChar(255)
   prazo          String                  @db.VarChar(255)
+  valorfinal     String?                 @db.VarChar(100)
+  prazofinal     String?                 @db.VarChar(255)
+  formafinal     String?                 @db.VarChar(255)
   criadopor      String                  @default("Sistema") @db.VarChar(255)
   atualizadopor  String                  @default("Sistema") @db.VarChar(255)
   criadoem       DateTime                @default(now())

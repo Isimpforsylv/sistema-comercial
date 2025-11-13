@@ -25,7 +25,7 @@ import {
   DialogContentText,
   DialogActions,
 } from '@mui/material';
-import { Add, ExpandMore, Info, SubdirectoryArrowRight, Delete, Edit } from '@mui/icons-material';
+import { Add, ExpandMore, Info, Delete, Edit } from '@mui/icons-material';
 import ValorModal from '../ValorModal';
 
 interface ValoresCardProps {
@@ -280,12 +280,9 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
                           {valor.recursos?.map((recurso) => (
                             <TableRow key={recurso.id} sx={{ backgroundColor: 'action.hover' }}>
                               <TableCell sx={{ pl: 4 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <SubdirectoryArrowRight fontSize="small" color="action" />
-                                  <Typography variant="body2" color="text.secondary">
-                                    {recurso.nomerecurso}
-                                  </Typography>
-                                </Box>
+                                <Typography variant="body2">
+                                  + {recurso.nomerecurso}
+                                </Typography>
                               </TableCell>
                               <TableCell align="right">{recurso.valor}</TableCell>
                               <TableCell align="right">-</TableCell>

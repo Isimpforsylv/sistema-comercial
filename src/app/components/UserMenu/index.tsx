@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   IconButton,
   Menu,
@@ -18,7 +18,7 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material';
-import { AccountCircle, Lock, Logout } from '@mui/icons-material';
+import { AccountCircle, Lock, Logout, AdminPanelSettings } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
 interface UserMenuProps {
@@ -29,12 +29,28 @@ export default function UserMenu({ userName }: UserMenuProps) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setIsAdmin(data.user?.admin || data.admin || false);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar admin:', error);
+      }
+    };
+    checkAdmin();
+  }, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -131,6 +147,14 @@ export default function UserMenu({ userName }: UserMenuProps) {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
+        {isAdmin && (
+          <MenuItem onClick={() => { handleMenuClose(); router.push('/admin'); }}>
+            <ListItemIcon>
+              <AdminPanelSettings fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Administração</ListItemText>
+          </MenuItem>
+        )}
         <MenuItem onClick={handleChangePasswordClick}>
           <ListItemIcon>
             <Lock fontSize="small" />

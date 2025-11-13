@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from './prisma';
 
 const SECRET_KEY = process.env.JWT_SECRET || 'sua-chave-secreta-super-segura-aqui-mude-em-producao';
 const key = new TextEncoder().encode(SECRET_KEY);
@@ -56,5 +57,33 @@ export async function removeAuthCookie() {
 export async function getCurrentUser(): Promise<TokenPayload | null> {
   const token = await getAuthCookie();
   if (!token) return null;
-  return await verifyToken(token);
+  
+  const payload = await verifyToken(token);
+  if (!payload) return null;
+  
+  // Verificar se o usuário ainda está ativo no banco
+  try {
+    const user = await (prisma as any).usuarios.findUnique({
+      where: { id: payload.userId },
+      select: { ativo: true },
+    });
+    
+    // Se o usuário foi desativado, invalidar sessão
+    if (!user || !user.ativo) {
+      await removeAuthCookie();
+      return null;
+    }
+    
+    // Verificar cookie de invalidação manual
+    const cookieStore = await cookies();
+    const invalidationCookie = cookieStore.get('session_invalidated_' + payload.userId);
+    if (invalidationCookie) {
+      await removeAuthCookie();
+      return null;
+    }
+  } catch (error) {
+    console.error('Erro ao verificar status do usuário:', error);
+  }
+  
+  return payload;
 }

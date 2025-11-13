@@ -1,6 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id?: string; propostaId?: string }> }
+) {
+  try {
+    const params = context?.params ? await context.params : undefined;
+    const propostaId = params?.propostaId ? Number(params.propostaId) : NaN;
+    
+    if (!propostaId) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+    }
+
+    const proposta = await (prisma as any).propostasAceitas.findUnique({
+      where: { id: propostaId },
+    });
+
+    if (!proposta) {
+      return NextResponse.json({ error: 'Proposta não encontrada' }, { status: 404 });
+    }
+
+    return NextResponse.json(proposta);
+  } catch (error) {
+    console.error('Erro ao buscar proposta:', error);
+    return NextResponse.json({ error: 'Erro ao buscar proposta' }, { status: 500 });
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id?: string; propostaId?: string }> }

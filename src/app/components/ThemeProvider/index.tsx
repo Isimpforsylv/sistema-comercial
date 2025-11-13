@@ -35,9 +35,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const newMode = mode === 'light' ? 'dark' : 'light';
     setMode(newMode);
     localStorage.setItem('theme-mode', newMode);
+    
+    // Atualiza cor de fundo do body imediatamente
+    if (typeof document !== 'undefined') {
+      document.body.style.backgroundColor = newMode === 'dark' ? '#121212' : '#fafafa';
+    }
   };
 
   const theme = getTheme(mode);
+
+  // Aplica cor de fundo ao montar
+  useEffect(() => {
+    if (mounted && typeof document !== 'undefined') {
+      document.body.style.backgroundColor = mode === 'dark' ? '#121212' : '#fafafa';
+    }
+  }, [mounted, mode]);
 
   // Evita flash de tema incorreto durante hidratação
   if (!mounted) {

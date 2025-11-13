@@ -161,11 +161,7 @@ export default function UsersTable() {
 
   return (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h5">Usuários</Typography>
-          <Typography variant="body2" color="text.secondary">Controle de acesso</Typography>
-        </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 3 }}>
         <Button variant="contained" startIcon={<Add />} onClick={() => setCreateOpen(true)}>Criar usuário</Button>
       </Box>
 

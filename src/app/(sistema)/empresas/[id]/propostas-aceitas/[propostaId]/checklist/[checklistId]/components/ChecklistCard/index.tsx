@@ -19,6 +19,7 @@ import ObservacaoModal from '../ObservacaoModal';
 import HistoricoModal from '../HistoricoModal';
 import CobrancasModal from '../CobrancasModal';
 import FinalizarModal from '../FinalizarModal';
+import PendenciasDialog from '../PendenciasDialog';
 import ConfirmDialog from '@/app/components/ConfirmDialog';
 
 interface ChecklistCardProps {
@@ -53,6 +54,7 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
   const [historicoModalOpen, setHistoricoModalOpen] = useState(false);
   const [cobrancasModalOpen, setCobrancasModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
+  const [pendenciasDialogOpen, setPendenciasDialogOpen] = useState(false);
   const [confirmDesfinalizarOpen, setConfirmDesfinalizarOpen] = useState(false);
   const [historicoTipo, setHistoricoTipo] = useState<'dataenvio' | 'dataretorno'>('dataenvio');
   const [loading, setLoading] = useState(true);
@@ -136,6 +138,43 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
       }
     } catch (error) {
       console.error('Erro ao desfinalizar etapa:', error);
+    }
+  };
+
+  const handleFinalizarSuccess = () => {
+    setFinalizarModalOpen(false);
+    setPendenciasDialogOpen(true);
+  };
+
+  const handlePendenciasResponse = async (temPendencias: boolean) => {
+    if (!temPendencias) {
+      // Não tem pendências: finalizar etapa de Pendências automaticamente
+      try {
+        const dataFimAtual = new Date().toISOString().split('T')[0];
+        await fetch(`/api/checklist/${checklistId}/etapas/Pendências/finalizar`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            datafim: dataFimAtual,
+            desfinalizar: false
+          }),
+        });
+      } catch (error) {
+        console.error('Erro ao finalizar Pendências:', error);
+      }
+    }
+    
+    // Recarregar etapa e notificar
+    await fetchEtapa();
+    onObservacaoAdded?.();
+    onEtapaStatusChange?.(true);
+    
+    // Se tem pendências, scroll até o painel de pendências
+    if (temPendencias) {
+      setTimeout(() => {
+        const observacoesPanel = document.querySelector('[data-observacoes-panel]');
+        observacoesPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 300);
     }
   };
 
@@ -260,7 +299,8 @@ export default function ChecklistCard({ checklistId, onObservacaoAdded, onEtapaS
       <ObservacaoModal open={obsModalOpen} onClose={() => setObsModalOpen(false)} onSuccess={() => { setObsModalOpen(false); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" />
       <HistoricoModal open={historicoModalOpen} onClose={() => setHistoricoModalOpen(false)} historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno} titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'} />
       <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Checklist" dataCobranca={etapa.cobrarem} readonly={disabled} />
-      <FinalizarModal open={finalizarModalOpen} onClose={() => setFinalizarModalOpen(false)} onSuccess={() => { setFinalizarModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); onEtapaStatusChange?.(true); }} checklistId={checklistId} nometapa="Checklist" dataInicio={etapa.dataenvio} previsaoInicial={etapa.dataretorno} />
+      <FinalizarModal open={finalizarModalOpen} onClose={() => setFinalizarModalOpen(false)} onSuccess={handleFinalizarSuccess} checklistId={checklistId} nometapa="Checklist" dataInicio={etapa.dataenvio} previsaoInicial={etapa.dataretorno} />
+      <PendenciasDialog open={pendenciasDialogOpen} onClose={() => setPendenciasDialogOpen(false)} onResponse={handlePendenciasResponse} />
     </>
   );
 }

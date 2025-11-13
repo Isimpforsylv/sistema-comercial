@@ -45,6 +45,7 @@ export default function RootLayout({
       <body
         className={`${inter.className} antialiased`}
         suppressHydrationWarning
+        style={{ minHeight: '100vh', margin: 0 }}
       >
         <ThemeProvider>
           <LoadingProvider>

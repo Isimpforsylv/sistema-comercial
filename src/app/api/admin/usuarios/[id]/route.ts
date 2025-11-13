@@ -57,6 +57,20 @@ export async function PUT(
       },
     });
 
+    // Se o usuário foi desativado, forçar logout invalidando a sessão
+    if (ativo === false) {
+      // Limpar o cookie de sessão do usuário desativado
+      const response = NextResponse.json(atualizado);
+      response.cookies.set('session_invalidated_' + id, Date.now().toString(), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 dias
+        path: '/',
+      });
+      return response;
+    }
+
     return NextResponse.json(atualizado);
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);

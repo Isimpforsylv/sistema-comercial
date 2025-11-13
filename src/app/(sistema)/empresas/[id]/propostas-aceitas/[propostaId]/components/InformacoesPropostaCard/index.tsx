@@ -74,11 +74,35 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
   const handleCopyPath = async () => {
     if (informacoes?.caminhopasta) {
       try {
-        await navigator.clipboard.writeText(informacoes.caminhopasta);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        // Tenta usar a API moderna de clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(informacoes.caminhopasta);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          // Fallback para navegadores mais antigos ou contextos inseguros
+          const textArea = document.createElement('textarea');
+          textArea.value = informacoes.caminhopasta;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }
+          } finally {
+            document.body.removeChild(textArea);
+          }
+        }
       } catch (error) {
         console.error('Erro ao copiar:', error);
+        alert('Não foi possível copiar. Por favor, copie manualmente.');
       }
     }
   };

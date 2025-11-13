@@ -59,6 +59,7 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
   const [initialLoad, setInitialLoad] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [pendenciasModalOpen, setPendenciasModalOpen] = useState(false);
+  const [expandedPanels, setExpandedPanels] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     setMounted(true);
@@ -81,6 +82,14 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
           grouped[obs.nometapa].push(obs);
         });
         setObservacoes(grouped);
+        
+        // Inicializar estado de expansão dos painéis
+        const newExpandedPanels: { [key: string]: boolean } = {};
+        Object.keys(grouped).forEach(nometapa => {
+          const estaFinalizada = etapasFinalizadas.includes(nometapa);
+          newExpandedPanels[nometapa] = !estaFinalizada;
+        });
+        setExpandedPanels(newExpandedPanels);
       }
     } catch (error) {
       console.error('Erro ao buscar observações:', error);
@@ -148,7 +157,11 @@ const ObservacoesCard = forwardRef<ObservacoesCardHandle, ObservacoesCardProps>(
               const estaFinalizada = etapasFinalizadas.includes(nometapa);
               
               return (
-                <Accordion key={nometapa} defaultExpanded={!estaFinalizada}>
+                <Accordion 
+                  key={nometapa} 
+                  expanded={expandedPanels[nometapa] ?? !estaFinalizada}
+                  onChange={(e, isExpanded) => setExpandedPanels(prev => ({ ...prev, [nometapa]: isExpanded }))}
+                >
                   <AccordionSummary expandIcon={<ExpandMore />}>
                     <Typography variant="subtitle2" fontWeight="bold">
                       {nometapa} ({obs.length}){estaFinalizada ? ' - Finalizada' : ''}

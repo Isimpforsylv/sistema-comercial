@@ -19,6 +19,7 @@ import ObservacaoModal from '../ObservacaoModal';
 import HistoricoModal from '../HistoricoModal';
 import CobrancasModal from '../CobrancasModal';
 import FinalizarModal from '../FinalizarModal';
+import ContratoJuntoEnvioDialog from '../ContratoJuntoEnvioDialog';
 import ConfirmDialog from '@/app/components/ConfirmDialog';
 
 interface AssinaturaContratoCardProps {
@@ -53,6 +54,7 @@ export default function AssinaturaContratoCard({ checklistId, onObservacaoAdded,
   const [historicoModalOpen, setHistoricoModalOpen] = useState(false);
   const [cobrancasModalOpen, setCobrancasModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
+  const [contratoJuntoDialogOpen, setContratoJuntoDialogOpen] = useState(false);
   const [confirmDesfinalizarOpen, setConfirmDesfinalizarOpen] = useState(false);
   const [historicoTipo, setHistoricoTipo] = useState<'dataenvio' | 'dataretorno'>('dataenvio');
   const [loading, setLoading] = useState(true);
@@ -137,6 +139,43 @@ export default function AssinaturaContratoCard({ checklistId, onObservacaoAdded,
     } catch (error) {
       console.error('Erro ao desfinalizar etapa:', error);
     }
+  };
+
+  const handleFinalizarSuccess = () => {
+    setFinalizarModalOpen(false);
+    
+    // Verifica se não tem nenhuma data preenchida
+    if (!etapa.dataenvio && !etapa.dataretorno) {
+      setContratoJuntoDialogOpen(true);
+    } else {
+      // Se tem data, finaliza normalmente
+      fetchEtapa();
+      onObservacaoAdded?.();
+      onEtapaStatusChange?.(true);
+    }
+  };
+
+  const handleContratoJuntoResponse = async (juntoEnvio: boolean) => {
+    if (juntoEnvio) {
+      // Criar observação automática
+      try {
+        await fetch(`/api/checklist/${checklistId}/observacoes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nometapa: 'Assinatura do Contrato',
+            observacao: 'Contrato será enviado junto ao Novo Serviço',
+          }),
+        });
+      } catch (error) {
+        console.error('Erro ao criar observação:', error);
+      }
+    }
+    
+    // Recarregar etapa e notificar
+    await fetchEtapa();
+    onObservacaoAdded?.();
+    onEtapaStatusChange?.(true);
   };
 
   if (loading || !mounted) return null;
@@ -249,8 +288,9 @@ export default function AssinaturaContratoCard({ checklistId, onObservacaoAdded,
 
       <ObservacaoModal open={obsModalOpen} onClose={() => setObsModalOpen(false)} onSuccess={() => { setObsModalOpen(false); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Assinatura do Contrato" />
       <HistoricoModal open={historicoModalOpen} onClose={() => setHistoricoModalOpen(false)} historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno} titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'} />
-  <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Assinatura do Contrato" dataCobranca={etapa.cobrarem} readonly={disabled} />
-      <FinalizarModal open={finalizarModalOpen} onClose={() => setFinalizarModalOpen(false)} onSuccess={() => { setFinalizarModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); onEtapaStatusChange?.(true); }} checklistId={checklistId} nometapa="Assinatura do Contrato" dataInicio={etapa.dataenvio} previsaoInicial={etapa.dataretorno} />
+      <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} checklistId={checklistId} nometapa="Assinatura do Contrato" dataCobranca={etapa.cobrarem} readonly={disabled} />
+      <FinalizarModal open={finalizarModalOpen} onClose={() => setFinalizarModalOpen(false)} onSuccess={handleFinalizarSuccess} checklistId={checklistId} nometapa="Assinatura do Contrato" dataInicio={etapa.dataenvio} previsaoInicial={etapa.dataretorno} />
+      <ContratoJuntoEnvioDialog open={contratoJuntoDialogOpen} onClose={() => setContratoJuntoDialogOpen(false)} onResponse={handleContratoJuntoResponse} />
       <ConfirmDialog
         open={confirmDesfinalizarOpen}
         onClose={() => setConfirmDesfinalizarOpen(false)}

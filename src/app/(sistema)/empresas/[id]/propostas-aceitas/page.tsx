@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Chip,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import Header from '@/app/components/Header';
@@ -24,6 +25,7 @@ interface PropostaAceita {
   id: number;
   nomeproposta: string;
   codproposta?: string | null;
+  finalizado?: boolean;
   criadoem: string;
 }
 
@@ -131,7 +133,12 @@ export default function PropostasAceitasPage() {
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                       <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6">{prop.nomeproposta}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                          <Typography variant="h6">{prop.nomeproposta}</Typography>
+                          {prop.finalizado && (
+                            <Chip label="Finalizado" color="success" size="small" />
+                          )}
+                        </Box>
                         {prop.codproposta && (
                           <Typography variant="body2" color="primary" sx={{ mb: 0.5 }}>
                             Código: {prop.codproposta}
