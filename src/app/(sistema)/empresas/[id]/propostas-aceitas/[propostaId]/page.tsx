@@ -68,9 +68,9 @@ export default function PropostaAceitaDetalhePage() {
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <InformacoesPropostaCard empresaId={empresaId} propostaId={propostaId} />
-          <ValoresCard empresaId={empresaId} propostaId={propostaId} />
-          <TiposServicoCard empresaId={empresaId} propostaId={propostaId} />
+          <InformacoesPropostaCard empresaId={empresaId} propostaId={propostaId} disabled={proposta?.finalizado} />
+          <ValoresCard empresaId={empresaId} propostaId={propostaId} disabled={proposta?.finalizado} />
+          <TiposServicoCard empresaId={empresaId} propostaId={propostaId} disabled={proposta?.finalizado} />
           
           {!proposta?.finalizado && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>

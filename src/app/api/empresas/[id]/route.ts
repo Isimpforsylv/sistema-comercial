@@ -36,7 +36,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { idgrupo, nomeempresa, codigoempresa, cliente } = body;
+    const { idgrupo, nomeempresa, codigoempresa, cliente, tipo } = body;
 
     const empresa = await prisma.empresas.update({
       where: { id: parseInt(params.id) },
@@ -45,6 +45,7 @@ export async function PUT(
         nomeempresa,
         codigoempresa,
         cliente,
+        tipo: tipo && tipo.length > 0 ? JSON.stringify(tipo) : '[]',
       },
       include: { grupo: true },
     });

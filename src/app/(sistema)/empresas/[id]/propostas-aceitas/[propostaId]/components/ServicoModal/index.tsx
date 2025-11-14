@@ -141,7 +141,7 @@ export default function ServicoModal({
                 value={formData.idtiposervico}
                 label="Tipo"
                 onChange={(e) => handleChange('idtiposervico', e.target.value)}
-                disabled={loading}
+                disabled={loading || !!servico}
               >
                 {tiposServico.map((tipo) => (
                   <MenuItem key={tipo.id} value={tipo.id.toString()}>

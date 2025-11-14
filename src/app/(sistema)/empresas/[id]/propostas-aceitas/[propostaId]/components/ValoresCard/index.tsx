@@ -31,6 +31,7 @@ import ValorModal from '../ValorModal';
 interface ValoresCardProps {
   empresaId: string | string[];
   propostaId: string | string[];
+  disabled?: boolean;
 }
 
 interface Recurso {
@@ -54,7 +55,7 @@ interface Valor {
   recursos: Recurso[];
 }
 
-export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps) {
+export default function ValoresCard({ empresaId, propostaId, disabled = false }: ValoresCardProps) {
   const [valores, setValores] = useState<Valor[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -193,6 +194,7 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
                   onClick={() => setModalOpen(true)}
                   variant="contained"
                   size="small"
+                  disabled={disabled}
                 >
                   Adicionar Valor
                 </Button>
@@ -260,6 +262,7 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
                                   size="small"
                                   color="primary"
                                   onClick={() => handleEditClick(valor)}
+                                  disabled={disabled}
                                 >
                                   <Edit fontSize="small" />
                                 </IconButton>
@@ -269,6 +272,7 @@ export default function ValoresCard({ empresaId, propostaId }: ValoresCardProps)
                                   size="small"
                                   color="error"
                                   onClick={() => handleDeleteClick(valor.id)}
+                                  disabled={disabled}
                                 >
                                   <Delete fontSize="small" />
                                 </IconButton>

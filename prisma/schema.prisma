@@ -34,6 +34,7 @@ model Empresas {
   nomeempresa      String             @db.VarChar(255)
   codigoempresa    String             @db.VarChar(100)
   cliente          Boolean            @default(false)
+  tipo             String?            @db.Text
   criadopor        String             @db.VarChar(255)
   criadoem         DateTime           @default(now())
   atualizadoem     DateTime           @updatedAt

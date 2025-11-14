@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { idgrupo, nomeempresa, codigoempresa, cliente, criadopor } = body;
+    const { idgrupo, nomeempresa, codigoempresa, cliente, tipo, criadopor } = body;
 
     if (!nomeempresa || !codigoempresa || !criadopor) {
       return NextResponse.json(
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
         nomeempresa,
         codigoempresa,
         cliente: cliente || false,
+        tipo: tipo && tipo.length > 0 ? JSON.stringify(tipo) : '[]',
         criadopor,
       },
       include: {

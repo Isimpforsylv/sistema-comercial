@@ -8,6 +8,7 @@ import InformacoesPropostaModal from '../InformacoesPropostaModal';
 interface InformacoesPropostaCardProps {
   empresaId: string | string[];
   propostaId: string | string[];
+  disabled?: boolean;
 }
 
 interface InformacoesProposta {
@@ -27,7 +28,7 @@ interface InformacoesProposta {
   atualizadopor: string;
 }
 
-export default function InformacoesPropostaCard({ empresaId, propostaId }: InformacoesPropostaCardProps) {
+export default function InformacoesPropostaCard({ empresaId, propostaId, disabled = false }: InformacoesPropostaCardProps) {
   const [informacoes, setInformacoes] = useState<InformacoesProposta | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -118,7 +119,7 @@ export default function InformacoesPropostaCard({ empresaId, propostaId }: Infor
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6">Informações da Proposta</Typography>
-            <Button startIcon={<Edit />} onClick={() => setModalOpen(true)} variant="outlined" size="small">
+            <Button startIcon={<Edit />} onClick={() => setModalOpen(true)} variant="outlined" size="small" disabled={disabled}>
               Editar
             </Button>
           </Box>

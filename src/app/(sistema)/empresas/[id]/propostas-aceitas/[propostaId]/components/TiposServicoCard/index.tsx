@@ -25,6 +25,7 @@ import ServicoModal from '../ServicoModal';
 interface TiposServicoCardProps {
   empresaId: string | string[];
   propostaId: string | string[];
+  disabled?: boolean;
 }
 
 interface Servico {
@@ -51,7 +52,7 @@ const STATUS_CONFIG = {
   desistiu: { label: 'Desistiu', color: '#9E9E9E' }, // Cinza
 };
 
-export default function TiposServicoCard({ empresaId, propostaId }: TiposServicoCardProps) {
+export default function TiposServicoCard({ empresaId, propostaId, disabled = false }: TiposServicoCardProps) {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -178,7 +179,7 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6">Lista de Serviços</Typography>
-            <Button startIcon={<Add />} onClick={() => setModalOpen(true)} variant="contained" size="small">
+            <Button startIcon={<Add />} onClick={() => setModalOpen(true)} variant="contained" size="small" disabled={disabled}>
               Adicionar Serviço
             </Button>
           </Box>
@@ -210,6 +211,7 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
                         color="primary"
                         onClick={() => handleEditClick(servico)}
                         size="small"
+                        disabled={disabled}
                       >
                         <Edit />
                       </IconButton>
@@ -218,6 +220,7 @@ export default function TiposServicoCard({ empresaId, propostaId }: TiposServico
                         color="error"
                         onClick={() => handleDeleteClick(servico.id)}
                         size="small"
+                        disabled={disabled}
                       >
                         <Delete />
                       </IconButton>

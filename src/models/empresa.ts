@@ -9,6 +9,7 @@ export interface Empresa {
   nomeempresa: string;
   codigoempresa: string;
   cliente: boolean;
+  tipo?: string | null;
   criadopor: string;
   criadoem: Date;
   atualizadoem: Date;
@@ -20,5 +21,6 @@ export interface CreateEmpresaInput {
   nomeempresa: string;
   codigoempresa: string;
   cliente: boolean;
+  tipo?: string[];
   criadopor: string;
 }
