@@ -156,7 +156,7 @@ model ServicosPropostasAceitas {
   criadoem      DateTime         @default(now())
   atualizadoem  DateTime         @updatedAt
   checklist     Checklist?
-  melhoria      Melhoria?
+  melhorias     Melhoria[]       @relation("ServicoMelhorias")
   proposta      PropostasAceitas @relation(fields: [idproposta], references: [id])
   tiposervico   TipoServico      @relation(fields: [idtiposervico], references: [id])
 
@@ -255,12 +255,86 @@ model ChecklistPendencias {
 
 model Melhoria {
   id            Int                      @id @default(autoincrement())
-  idservico     Int                      @unique
-  criadopor     String                   @default("Sistema") @db.VarChar(255)
-  atualizadopor String                   @default("Sistema") @db.VarChar(255)
+  idservico     Int
+  status        String                   @default("em_andamento") @db.VarChar(50)
+  codigoespecificacao String?            @db.VarChar(100)
+  dataretorno   DateTime?
   criadoem      DateTime                 @default(now())
   atualizadoem  DateTime                 @updatedAt
-  servico       ServicosPropostasAceitas @relation(fields: [idservico], references: [id], onDelete: Cascade)
+  servico       ServicosPropostasAceitas @relation("ServicoMelhorias", fields: [idservico], references: [id], onDelete: Cascade)
+  etapas        MelhoriaEtapa[]
+  observacoes   MelhoriaObservacao[]
+  pendencias    MelhoriaPendencia[]
 
-  @@map("melhoria")
+  @@index([idservico], map: "melhorias_idservico_fkey")
+
+  @@map("melhorias")
+}
+
+model MelhoriaEtapa {
+  id                   Int                  @id @default(autoincrement())
+  idmelhoria           Int
+  nometapa             String               @db.VarChar(100)
+  finalizada           Boolean              @default(false)
+  dataenvio            DateTime?            @db.Date
+  dataretorno          DateTime?            @db.Date
+  cobrarem             DateTime?            @db.Date
+  historicodataenvio   String?              @db.Text
+  historicodataretorno String?              @db.Text
+  datafim              DateTime?            @db.Date
+  criadopor            String               @default("Sistema") @db.VarChar(255)
+  atualizadopor        String               @default("Sistema") @db.VarChar(255)
+  criadoem             DateTime             @default(now())
+  atualizadoem         DateTime             @updatedAt
+  melhoria             Melhoria             @relation(fields: [idmelhoria], references: [id], onDelete: Cascade)
+  cobrancas            MelhoriaCobranca[]
+
+  @@index([idmelhoria], map: "melhorias_etapas_idmelhoria_fkey")
+  @@map("melhorias_etapas")
+}
+
+model MelhoriaCobranca {
+  id              Int             @id @default(autoincrement())
+  idetapa         Int
+  datacobranca    DateTime
+  quandofcobrado  DateTime
+  proximacobranca DateTime
+  observacao      String?         @db.Text
+  criadopor       String          @default("Sistema") @db.VarChar(255)
+  atualizadopor   String          @default("Sistema") @db.VarChar(255)
+  criadoem        DateTime        @default(now())
+  atualizadoem    DateTime        @updatedAt
+  etapa           MelhoriaEtapa   @relation(fields: [idetapa], references: [id], onDelete: Cascade)
+
+  @@index([idetapa], map: "melhorias_cobrancas_idetapa_fkey")
+  @@map("melhorias_cobrancas")
+}
+
+model MelhoriaObservacao {
+  id         Int      @id @default(autoincrement())
+  idmelhoria Int
+  nometapa   String   @db.VarChar(100)
+  observacao String   @db.Text
+  criadopor  String?  @db.VarChar(255)
+  criadoem   DateTime @default(now())
+  melhoria   Melhoria @relation(fields: [idmelhoria], references: [id], onDelete: Cascade)
+
+  @@index([idmelhoria], map: "melhorias_observacoes_idmelhoria_fkey")
+  @@map("melhorias_observacoes")
+}
+
+model MelhoriaPendencia {
+  id            Int       @id @default(autoincrement())
+  idmelhoria    Int
+  descricao     String    @db.Text
+  impeditiva    Boolean   @default(false)
+  finalizada    Boolean   @default(false)
+  criadopor     String?   @db.VarChar(255)
+  finalizadopor String?   @db.VarChar(255)
+  criadoem      DateTime  @default(now())
+  finalizadaem  DateTime?
+  melhoria      Melhoria  @relation(fields: [idmelhoria], references: [id], onDelete: Cascade)
+
+  @@index([idmelhoria], map: "melhorias_pendencias_idmelhoria_fkey")
+  @@map("melhorias_pendencias")
 }

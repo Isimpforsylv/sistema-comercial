@@ -41,7 +41,10 @@ interface Servico {
     id: number;
     status?: string;
   } | null;
-  melhoria?: { id: number } | null;
+  melhorias?: Array<{ 
+    id: number;
+    status?: string;
+  }>;
 }
 
 const STATUS_CONFIG = {
@@ -122,8 +125,8 @@ export default function TiposServicoCard({ empresaId, propostaId, disabled = fal
   const handleOpenServico = (servico: Servico) => {
     if (servico.tiposervico.nometiposervico === 'Checklist' && servico.checklist) {
       router.push(`/empresas/${empresaId}/propostas-aceitas/${propostaId}/checklist/${servico.checklist.id}`);
-    } else if (servico.tiposervico.nometiposervico === 'Melhoria' && servico.melhoria) {
-      router.push(`/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${servico.melhoria.id}`);
+    } else if (servico.tiposervico.nometiposervico === 'Melhoria' && servico.melhorias && servico.melhorias.length > 0) {
+      router.push(`/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${servico.melhorias[0].id}`);
     }
   };
 
@@ -250,6 +253,17 @@ export default function TiposServicoCard({ empresaId, propostaId, disabled = fal
                             size="small"
                             sx={{
                               bgcolor: STATUS_CONFIG[servico.checklist.status as keyof typeof STATUS_CONFIG]?.color || '#9E9E9E',
+                              color: 'white',
+                              fontWeight: 'bold',
+                            }}
+                          />
+                        )}
+                        {servico.melhorias && servico.melhorias.length > 0 && servico.melhorias[0].status && (
+                          <Chip
+                            label={STATUS_CONFIG[servico.melhorias[0].status as keyof typeof STATUS_CONFIG]?.label || servico.melhorias[0].status}
+                            size="small"
+                            sx={{
+                              bgcolor: STATUS_CONFIG[servico.melhorias[0].status as keyof typeof STATUS_CONFIG]?.color || '#9E9E9E',
                               color: 'white',
                               fontWeight: 'bold',
                             }}

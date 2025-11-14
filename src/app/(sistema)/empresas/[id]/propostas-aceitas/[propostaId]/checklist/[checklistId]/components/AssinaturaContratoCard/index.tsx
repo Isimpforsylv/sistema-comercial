@@ -208,7 +208,7 @@ export default function AssinaturaContratoCard({ checklistId, onObservacaoAdded,
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button startIcon={<NoteAdd />} variant="outlined" size="small" onClick={() => setObsModalOpen(true)} disabled={disabled}>Observação</Button>
                 {etapa.cobrarem && (
-                  <Button variant="outlined" size="small" onClick={() => setCobrancasModalOpen(true)} disabled={disabled}>Histórico de Cobranças</Button>
+                  <Button variant="outlined" size="small" onClick={() => setCobrancasModalOpen(true)}>Histórico de Cobranças</Button>
                 )}
                 <Button variant="outlined" color="warning" size="small" onClick={() => setConfirmDesfinalizarOpen(true)} disabled={disabled}>Desfinalizar</Button>
               </Box>

@@ -12,7 +12,10 @@ import {
 } from '@mui/material';
 
 interface StatusSelectorProps {
-  checklistId: string | string[];
+  checklistId?: string | string[];
+  melhoriaId?: string | string[];
+  empresaId?: string | string[];
+  propostaId?: string | string[];
   onStatusChange?: (status: string) => void;
   onValidationError?: (etapas: string[], pendencias: string[]) => void;
 }
@@ -25,27 +28,39 @@ const STATUS_CONFIG = {
   desistiu: { label: 'Desistiu', color: '#9E9E9E' }, // Cinza
 };
 
-export default function StatusSelector({ checklistId, onStatusChange, onValidationError }: StatusSelectorProps) {
+export default function StatusSelector({ checklistId, melhoriaId, empresaId, propostaId, onStatusChange, onValidationError }: StatusSelectorProps) {
   const [status, setStatus] = useState('em_andamento');
   const [dataretorno, setDataretorno] = useState('');
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    fetchStatus();
-  }, [checklistId]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      fetchStatus();
+    }
+  }, [mounted]);
 
   const fetchStatus = async () => {
     try {
-      const response = await fetch(`/api/checklist/${checklistId}/status`);
+      let response;
+      if (checklistId) {
+        response = await fetch(`/api/checklist/${checklistId}/status`);
+      } else if (melhoriaId) {
+        response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${melhoriaId}/status`);
+      } else {
+        setLoading(false);
+        return;
+      }
+      
       if (response.ok) {
         const data = await response.json();
         setStatus(data.status || 'em_andamento');
         if (data.dataretorno) {
           setDataretorno(new Date(data.dataretorno).toISOString().split('T')[0]);
-        }
-        // Propaga status inicial para o pai
-        if (data.status) {
-          onStatusChange?.(data.status);
         }
       }
     } catch (error) {
@@ -64,11 +79,22 @@ export default function StatusSelector({ checklistId, onStatusChange, onValidati
         body.dataretorno = dataretorno;
       }
 
-      const response = await fetch(`/api/checklist/${checklistId}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      let response;
+      if (checklistId) {
+        response = await fetch(`/api/checklist/${checklistId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      } else if (melhoriaId) {
+        response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${melhoriaId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      } else {
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -102,11 +128,19 @@ export default function StatusSelector({ checklistId, onStatusChange, onValidati
     // Se já está pausado, atualizar data
     if (status === 'pausado' && novaData) {
       try {
-        await fetch(`/api/checklist/${checklistId}/status`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'pausado', dataretorno: novaData }),
-        });
+        if (checklistId) {
+          await fetch(`/api/checklist/${checklistId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'pausado', dataretorno: novaData }),
+          });
+        } else if (melhoriaId) {
+          await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${melhoriaId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'pausado', dataretorno: novaData }),
+          });
+        }
       } catch (error) {
         console.error('Erro ao atualizar data de retorno:', error);
       }

@@ -21,8 +21,10 @@ import CobrancasModal from '../CobrancasModal';
 import FinalizarModal from '../FinalizarModal';
 import ConfirmDialog from '@/app/components/ConfirmDialog';
 
-interface PreChecklistCardProps {
-  checklistId: string | string[];
+interface PendenciasCardProps {
+  melhoriaId: string | string[];
+  empresaId: string | string[];
+  propostaId: string | string[];
   onObservacaoAdded?: () => void;
   onEtapaStatusChange?: (finalizada: boolean) => void;
   disabled?: boolean;
@@ -39,7 +41,7 @@ interface EtapaData {
   datafim?: string;
 }
 
-export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEtapaStatusChange, disabled = false }: PreChecklistCardProps) {
+export default function PendenciasCard({ melhoriaId, empresaId, propostaId, onObservacaoAdded, onEtapaStatusChange, disabled = false }: PendenciasCardProps) {
   const [etapa, setEtapa] = useState<EtapaData>({
     dataenvio: '',
     dataretorno: '',
@@ -65,11 +67,11 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
   const fetchEtapa = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/checklist/${checklistId}/etapas/Pre-Checklist`);
+      const response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${melhoriaId}/etapas/pendencias`);
       if (response.ok) {
         const data = await response.json();
-        if (data) {
-          // Converter datas para formato yyyy-MM-dd
+        console.log('Dados recebidos da API:', data);
+        if (data && data.id !== null) {
           setEtapa({
             ...data,
             dataenvio: data.dataenvio ? new Date(data.dataenvio).toISOString().split('T')[0] : '',
@@ -78,8 +80,10 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
             datafim: data.datafim ? new Date(data.datafim).toISOString().split('T')[0] : '',
             finalizada: data.finalizada || false,
           });
-          // Notifica o pai sobre mudança de status
           onEtapaStatusChange?.(data.finalizada || false);
+        } else {
+          // Etapa ainda não criada
+          console.log('Etapa ainda não existe no banco');
         }
       }
     } catch (error) {
@@ -93,24 +97,18 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
     if (mounted) {
       fetchEtapa();
     }
-  }, [checklistId, mounted]);
+  }, [melhoriaId, mounted]);
 
   const handleDateChange = async (field: 'dataenvio' | 'dataretorno', value: string) => {
     try {
-      const response = await fetch(`/api/checklist/${checklistId}/etapas/Pre-Checklist`, {
+      const response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${melhoriaId}/etapas/pendencias`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: value }),
       });
       
       if (response.ok) {
-        // Se mudou dataretorno, atualiza também cobrarem
-        if (field === 'dataretorno' && value) {
-          setEtapa((prev) => ({ ...prev, [field]: value, cobrarem: value }));
-        } else {
-          setEtapa((prev) => ({ ...prev, [field]: value }));
-        }
-        // Removido fetchEtapa() - não precisa recarregar tudo, apenas atualiza o estado local
+        await fetchEtapa(); // Recarregar dados completos do servidor
       }
     } catch (error) {
       console.error('Erro ao atualizar data:', error);
@@ -123,19 +121,17 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
   };
 
   const handleDesfinalizar = async () => {
-    console.log('handleDesfinalizar chamado - Pre-Checklist');
     try {
-      const response = await fetch(`/api/checklist/${checklistId}/etapas/Pre-Checklist/finalizar`, {
+      const response = await fetch(`/api/empresas/${empresaId}/propostas-aceitas/${propostaId}/melhoria/${melhoriaId}/etapas/pendencias/finalizar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ desfinalizar: true }),
       });
 
-      console.log('Response status:', response.status);
       if (response.ok) {
         await fetchEtapa();
-        onObservacaoAdded?.();
         onEtapaStatusChange?.(false);
+        // NÃO chama onObservacaoAdded para manter modal de gerenciar pendências aberto
       }
     } catch (error) {
       console.error('Erro ao desfinalizar etapa:', error);
@@ -144,14 +140,13 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
 
   if (loading || !mounted) return null;
 
-  // Se a etapa estiver finalizada, renderiza como Accordion
   if (etapa.finalizada) {
     return (
       <>
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
-              <Typography variant="h6">Pre-Checklist - Finalizada</Typography>
+              <Typography variant="h6">Pendências - Finalizada</Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                 <Typography variant="body2">
                   <strong>Data início:</strong> {etapa.dataenvio ? new Date(etapa.dataenvio).toLocaleDateString('pt-BR') : '-'}
@@ -171,112 +166,37 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold">Detalhes da Etapa</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  startIcon={<NoteAdd />}
-                  variant="outlined"
-                  size="small"
-                  onClick={() => setObsModalOpen(true)}
-                  disabled={disabled}
-                >
-                  Observação
-                </Button>
+                <Button startIcon={<NoteAdd />} variant="outlined" size="small" onClick={() => setObsModalOpen(true)} disabled={disabled}>Observação</Button>
                 {etapa.cobrarem && (
                   <Button variant="outlined" size="small" onClick={() => setCobrancasModalOpen(true)}>Histórico de Cobranças</Button>
                 )}
                 <Button variant="outlined" color="warning" size="small" onClick={() => setConfirmDesfinalizarOpen(true)} disabled={disabled}>Desfinalizar</Button>
               </Box>
             </Box>
-
             <Box sx={{ display: 'flex', gap: 3 }}>
-              {/* Campos desabilitados para visualização */}
               <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
-                  Data do envio:
-                </Typography>
-                <TextField
-                  type="date"
-                  fullWidth
-                  size="small"
-                  value={etapa.dataenvio || ''}
-                  InputLabelProps={{ shrink: true }}
-                  disabled
-                />
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>Data do envio:</Typography>
+                <TextField type="date" fullWidth size="small" value={etapa.dataenvio || ''} InputLabelProps={{ shrink: true }} disabled />
               </Box>
-
               <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
-                  Data do retorno:
-                </Typography>
-                <TextField
-                  type="date"
-                  fullWidth
-                  size="small"
-                  value={etapa.dataretorno || ''}
-                  InputLabelProps={{ shrink: true }}
-                  disabled
-                />
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>Data do retorno:</Typography>
+                <TextField type="date" fullWidth size="small" value={etapa.dataretorno || ''} InputLabelProps={{ shrink: true }} disabled />
               </Box>
-
               <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
-                  Cobrar em:
-                </Typography>
-                <TextField
-                  type="date"
-                  fullWidth
-                  size="small"
-                  value={etapa.cobrarem || ''}
-                  InputLabelProps={{ shrink: true }}
-                  disabled
-                />
+                <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>Cobrar em:</Typography>
+                <TextField type="date" fullWidth size="small" value={etapa.cobrarem || ''} InputLabelProps={{ shrink: true }} disabled />
               </Box>
             </Box>
           </AccordionDetails>
         </Accordion>
 
-        {/* Modais */}
-        <ObservacaoModal
-          open={obsModalOpen}
-          onClose={() => setObsModalOpen(false)}
-          onSuccess={() => {
-            setObsModalOpen(false);
-            onObservacaoAdded?.();
-          }}
-          checklistId={checklistId}
-          nometapa="Pre-Checklist"
-        />
-
-        <HistoricoModal
-          open={historicoModalOpen}
-          onClose={() => setHistoricoModalOpen(false)}
-          historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno}
-          titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'}
-        />
-
-        <CobrancasModal
-          open={cobrancasModalOpen}
-          onClose={() => setCobrancasModalOpen(false)}
-          onSuccess={() => {
-            setCobrancasModalOpen(false);
-            fetchEtapa();
-            onObservacaoAdded?.();
-          }}
-          checklistId={checklistId}
-          nometapa="Pre-Checklist"
-          dataCobranca={etapa.cobrarem}
-          readonly={true}
-        />
-
+        <ObservacaoModal open={obsModalOpen} onClose={() => setObsModalOpen(false)} onSuccess={() => { setObsModalOpen(false); onObservacaoAdded?.(); }} melhoriaId={melhoriaId} empresaId={empresaId} propostaId={propostaId} nometapa="Pendências" />
+        <HistoricoModal open={historicoModalOpen} onClose={() => setHistoricoModalOpen(false)} historico={historicoTipo === 'dataenvio' ? etapa.historicodataenvio : etapa.historicodataretorno} titulo={historicoTipo === 'dataenvio' ? 'Histórico - Data do Envio' : 'Histórico - Data do Retorno'} />
+        <CobrancasModal open={cobrancasModalOpen} onClose={() => setCobrancasModalOpen(false)} onSuccess={() => { setCobrancasModalOpen(false); fetchEtapa(); onObservacaoAdded?.(); }} melhoriaId={melhoriaId} empresaId={empresaId} propostaId={propostaId} nometapa="Pendências" dataCobranca={etapa.cobrarem} readonly={true} />
         <ConfirmDialog
           open={confirmDesfinalizarOpen}
-          onClose={() => {
-            console.log('ConfirmDialog fechando - Pre-Checklist (finalizada)');
-            setConfirmDesfinalizarOpen(false);
-          }}
-          onConfirm={() => {
-            console.log('ConfirmDialog confirmado - Pre-Checklist (finalizada)');
-            handleDesfinalizar();
-          }}
+          onClose={() => setConfirmDesfinalizarOpen(false)}
+          onConfirm={handleDesfinalizar}
           title="Desfinalizar Etapa"
           message="Deseja realmente desfinalizar esta etapa? Ela voltará ao estado ativo."
           confirmText="Desfinalizar"
@@ -286,20 +206,18 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
     );
   }
 
-  // Se a etapa estiver ativa, renderiza como Card normal
   return (
     <>
       <Card>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">Pre-Checklist</Typography>
+            <Typography variant="h6">Pendências</Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 startIcon={<NoteAdd />}
                 variant="outlined"
                 size="small"
                 onClick={() => setObsModalOpen(true)}
-                disabled={disabled}
               >
                 Observação
               </Button>
@@ -372,7 +290,7 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
               />
             </Box>
 
-            {/* Cobrar em (somente leitura) */}
+            {/* Cobrar em */}
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, minHeight: '32px' }}>
                 <Typography variant="body2" fontWeight="bold">
@@ -400,8 +318,10 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
           setObsModalOpen(false);
           onObservacaoAdded?.();
         }}
-        checklistId={checklistId}
-        nometapa="Pre-Checklist"
+        melhoriaId={melhoriaId}
+        empresaId={empresaId}
+        propostaId={propostaId}
+        nometapa="Pendências"
       />
 
       <HistoricoModal
@@ -419,10 +339,11 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
           fetchEtapa();
           onObservacaoAdded?.();
         }}
-        checklistId={checklistId}
-        nometapa="Pre-Checklist"
+        melhoriaId={melhoriaId}
+        empresaId={empresaId}
+        propostaId={propostaId}
+        nometapa="Pendências"
         dataCobranca={etapa.cobrarem}
-        readonly={disabled}
       />
 
       <FinalizarModal
@@ -431,29 +352,15 @@ export default function PreChecklistCard({ checklistId, onObservacaoAdded, onEta
         onSuccess={() => {
           setFinalizarModalOpen(false);
           fetchEtapa();
-          onObservacaoAdded?.();
           onEtapaStatusChange?.(true);
+          // NÃO chama onObservacaoAdded para manter modal de gerenciar pendências aberto
         }}
-        checklistId={checklistId}
-        nometapa="Pre-Checklist"
+        melhoriaId={melhoriaId}
+        empresaId={empresaId}
+        propostaId={propostaId}
+        nometapa="Pendências"
         dataInicio={etapa.dataenvio}
         previsaoInicial={etapa.dataretorno}
-      />
-
-      <ConfirmDialog
-        open={confirmDesfinalizarOpen}
-        onClose={() => {
-          console.log('ConfirmDialog fechando - Pre-Checklist');
-          setConfirmDesfinalizarOpen(false);
-        }}
-        onConfirm={() => {
-          console.log('ConfirmDialog confirmado - Pre-Checklist');
-          handleDesfinalizar();
-        }}
-        title="Desfinalizar Etapa"
-        message="Deseja realmente desfinalizar esta etapa? Ela voltará ao estado ativo."
-        confirmText="Desfinalizar"
-        confirmColor="warning"
       />
     </>
   );

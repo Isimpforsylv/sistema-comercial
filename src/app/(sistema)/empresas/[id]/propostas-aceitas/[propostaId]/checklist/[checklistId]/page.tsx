@@ -53,17 +53,15 @@ export default function ChecklistPage() {
     <>
       <Header />
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Checklist
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Gerencie as etapas do checklist e observações
-          </Typography>
-        </Box>
-
-        {/* Status Selector */}
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Checklist
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Gerencie as etapas do checklist e observações
+            </Typography>
+          </Box>
           <StatusSelector 
             checklistId={checklistId}
             onStatusChange={setStatusChecklist}

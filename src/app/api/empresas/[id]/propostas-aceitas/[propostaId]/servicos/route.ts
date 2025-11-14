@@ -17,10 +17,13 @@ export async function GET(request: NextRequest) {
           select: { 
             id: true,
             status: true,
-          } as any, // Type assertion para campo recém adicionado
+          } as any,
         },
-        melhoria: {
-          select: { id: true },
+        melhorias: {
+          select: { 
+            id: true,
+            status: true,
+          },
         },
       },
       orderBy: { criadoem: 'desc' },
@@ -89,11 +92,17 @@ export async function POST(request: NextRequest) {
         })),
       });
     } else if (servico.tiposervico.nometiposervico === 'Melhoria') {
-      await prisma.melhoria.create({
+      const melhoria = await (prisma as any).melhoria.create({
         data: {
           idservico: servico.id,
-          criadopor: user?.nome || 'Sistema',
-          atualizadopor: user?.nome || 'Sistema',
+        },
+      });
+
+      // Criar etapa de Pendências
+      await (prisma as any).melhoriaEtapa.create({
+        data: {
+          idmelhoria: melhoria.id,
+          nometapa: 'Pendências',
         },
       });
     }
